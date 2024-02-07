@@ -1,2 +1,5 @@
 /target
 /dist
+Cargo.lock
+/.vscode
+/config
