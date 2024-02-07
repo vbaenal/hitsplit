@@ -1,7 +1,7 @@
 # HitSplit
 
-[![dependency status](https://deps.rs/repo/github/emilk/eframe_template/status.svg)](https://deps.rs/repo/github/emilk/eframe_template)
-[![Build Status](https://github.com/vbaenal/hitless-companion-app-priv/workflows/CI/badge.svg)](https://github.com/vbaenal/hitless-companion-app-priv/actions?workflow=CI)
+[![dependency status](https://deps.rs/repo/github/vbaenal/hitsplit/status.svg)](https://deps.rs/repo/github/vbaenal/hitsplit)
+[![Build Status](https://github.com/vbaenal/hitsplit/workflows/CI/badge.svg)](https://github.com/vbaenal/hitsplit/actions?workflow=CI)
 
 HitSplit is a multiplatform tool for keeping track of your no-hit runs.
 
