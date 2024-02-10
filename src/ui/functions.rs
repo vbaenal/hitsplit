@@ -18,7 +18,7 @@ pub fn integer_edit_field_u64(ui: &mut egui::Ui, value: &mut u64, width: f32) ->
     res
 }
 
-pub fn integer_edit_field(ui: &mut egui::Ui, value: &mut u16) -> egui::Response {
+pub fn integer_edit_field_u16(ui: &mut egui::Ui, value: &mut u16) -> egui::Response {
     let mut tmp_value = format!("{}", value);
     let res = ui.add(egui::TextEdit::singleline(&mut tmp_value).desired_width(24.0));
     if tmp_value == "" {

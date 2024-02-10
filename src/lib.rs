@@ -1,5 +1,5 @@
-mod app;
-mod utils;
+mod config;
+mod run;
+mod ui;
 
-pub use app::HitSplit;
-pub use utils::{image_button, integer_edit_field, integer_edit_field_u64};
+pub use ui::hitsplit::HitSplit;
