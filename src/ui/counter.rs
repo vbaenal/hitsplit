@@ -20,7 +20,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                 });
                 if app_cl.loaded_category.is_some() {
                     ui.vertical_centered(|ui| {
-                        ui.label(app_cl.loaded_category.unwrap().name);
+                        ui.label(app_cl.loaded_category.as_ref().unwrap().name.clone());
                     });
                 }
 
@@ -57,7 +57,10 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                         })
                         .body(|mut body| {
                             app_cl
-                                .loaded_splits
+                                .loaded_category
+                                .as_ref()
+                                .unwrap()
+                                .splits
                                 .iter()
                                 .enumerate()
                                 .for_each(|(i, split)| {
@@ -99,18 +102,30 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                     ui.colored_label(color, "Total: ");
                                 });
                                 row.col(|ui| {
-                                    let hits = app_cl.loaded_splits.iter().map(|split| split.hits);
+                                    let hits = app_cl
+                                        .loaded_category
+                                        .as_ref()
+                                        .unwrap()
+                                        .splits
+                                        .iter()
+                                        .map(|split| split.hits);
                                     ui.colored_label(color, hits.sum::<u16>().to_string());
                                 });
                                 row.col(|ui| {
-                                    let diffs = app_cl
-                                        .loaded_splits
-                                        .iter()
-                                        .map(|split| i32::from(split.hits) - i32::from(split.pb));
+                                    let diffs =
+                                        app_cl.loaded_category.as_ref().unwrap().splits.iter().map(
+                                            |split| i32::from(split.hits) - i32::from(split.pb),
+                                        );
                                     ui.colored_label(color, diffs.sum::<i32>().to_string());
                                 });
                                 row.col(|ui| {
-                                    let pbs = app_cl.loaded_splits.iter().map(|split| split.pb);
+                                    let pbs = app_cl
+                                        .loaded_category
+                                        .as_ref()
+                                        .unwrap()
+                                        .splits
+                                        .iter()
+                                        .map(|split| split.pb);
                                     ui.colored_label(color, pbs.sum::<u16>().to_string());
                                 });
                             });

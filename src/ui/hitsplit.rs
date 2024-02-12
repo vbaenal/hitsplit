@@ -7,11 +7,7 @@ use crate::{
         config::Config,
         keybindings::{keybinding_handler, Keybindings},
     },
-    run::{
-        category::{Category, SmallCategory},
-        game::SmallGame,
-        split::Split,
-    },
+    run::{category::Category, game::Game},
 };
 use eframe::{egui::Visuals, Storage};
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyManager};
@@ -26,10 +22,6 @@ use std::{
 pub struct HitSplit {
     pub config: Config,
     pub keybinding: Option<Keybindings>,
-    pub selected_game: String,
-    pub selected_category: String,
-    pub game_str: String,
-    pub category_str: String,
     pub num_splits_category: u16,
     pub open_page: Pages,
     pub add_game_name: String,
@@ -38,9 +30,8 @@ pub struct HitSplit {
     pub add_category_name: String,
     pub add_category_open: bool,
     pub add_category_empty: bool,
-    pub loaded_game: Option<SmallGame>,
-    pub loaded_category: Option<SmallCategory>,
-    pub loaded_splits: Vec<Split>,
+    pub loaded_game: Option<Game>,
+    pub loaded_category: Option<Category>,
     pub selected_split: u16,
     pub show_hit_counter: Arc<AtomicBool>,
     pub hotkey_manager: Option<GlobalHotKeyManager>,
@@ -51,10 +42,6 @@ impl Clone for HitSplit {
         Self {
             config: self.config.clone(),
             keybinding: self.keybinding.clone(),
-            selected_game: self.selected_game.clone(),
-            selected_category: self.selected_category.clone(),
-            game_str: self.game_str.clone(),
-            category_str: self.category_str.clone(),
             num_splits_category: self.num_splits_category.clone(),
             open_page: self.open_page.clone(),
             add_game_name: self.add_game_name.clone(),
@@ -65,7 +52,6 @@ impl Clone for HitSplit {
             add_category_empty: self.add_category_empty.clone(),
             loaded_game: self.loaded_game.clone(),
             loaded_category: self.loaded_category.clone(),
-            loaded_splits: self.loaded_splits.clone(),
             selected_split: self.selected_split.clone(),
             show_hit_counter: self.show_hit_counter.clone(),
             hotkey_manager: None,
@@ -78,10 +64,6 @@ impl Default for HitSplit {
         Self {
             config: Default::default(),
             keybinding: Some(Default::default()),
-            selected_game: "".to_string(),
-            selected_category: "".to_string(),
-            game_str: "".to_string(),
-            category_str: "".to_string(),
             num_splits_category: 0,
             open_page: Pages::List,
             add_game_name: "".to_string(),
@@ -92,7 +74,6 @@ impl Default for HitSplit {
             add_category_empty: false,
             loaded_game: None,
             loaded_category: None,
-            loaded_splits: Vec::new(),
             selected_split: 0,
             show_hit_counter: Default::default(),
             hotkey_manager: Some(GlobalHotKeyManager::new().unwrap()),
@@ -140,10 +121,8 @@ impl eframe::App for HitSplit {
     fn save(&mut self, _storage: &mut dyn Storage) {
         if self.config.autosave {
             self.config.save();
-            if self.selected_category != "" {
-                let mut tmp_cat = Category::load(self.selected_category.clone());
-                tmp_cat.splits = self.loaded_splits.clone();
-                tmp_cat.save();
+            if let Some(cat) = &self.loaded_category {
+                cat.save();
             }
         }
     }
@@ -176,10 +155,8 @@ impl eframe::App for HitSplit {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         if !self.config.autosave {
             self.config.save();
-            if self.selected_category != "" {
-                let mut tmp_cat = Category::load(self.selected_category.clone());
-                tmp_cat.splits = self.loaded_splits.clone();
-                tmp_cat.save();
+            if let Some(cat) = &self.loaded_category {
+                cat.save();
             }
         }
     }

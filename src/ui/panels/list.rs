@@ -36,23 +36,14 @@ fn add_game(app: &mut HitSplit, ctx: &Context) {
                             name: app.add_game_name.clone(),
                         });
                         let game = Game::new(uuid, app.add_game_name.clone());
-                        app.selected_game = game.uuid.clone();
                         game.save();
                         app.add_game_name = "".to_string();
                         app.add_game_empty = false;
                         app.add_game_open = false;
-                        app.game_str = match std::fs::read_to_string(format!(
-                            "config/games/{}.json",
-                            app.selected_game
-                        )) {
-                            Err(_) => "".to_owned(),
-                            Ok(f) => f.clone(),
-                        };
-                        app.selected_category = "".to_string();
                         app.config.save();
-                        app.loaded_splits = Vec::new();
                         app.num_splits_category = 0;
                         app.loaded_category = None;
+                        app.loaded_game = Some(game);
                     }
                 }
                 if ui.small_button("Cancel").clicked() {
@@ -84,7 +75,7 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
                     if app.add_category_name.eq("") {
                         app.add_category_empty = true;
                     } else {
-                        let mut game: Game = Game::load(app.selected_game.clone());
+                        let mut game: Game = app.loaded_game.as_ref().unwrap().clone();
                         let uuid: String = Uuid::new_v4().to_string();
                         app.add_category_open = false;
                         game.categories.push(SmallCategory {
@@ -94,24 +85,9 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
                         let category = Category::new(uuid.clone(), app.add_category_name.clone());
                         app.add_category_name = "".to_string();
                         app.add_category_empty = false;
-                        app.selected_category = uuid;
                         game.save();
-                        app.game_str = match std::fs::read_to_string(format!(
-                            "config/games/{}.json",
-                            app.selected_game
-                        )) {
-                            Err(_) => "".to_owned(),
-                            Ok(f) => f.clone(),
-                        };
                         category.save();
-                        app.category_str = match std::fs::read_to_string(format!(
-                            "config/categories/{}.json",
-                            app.selected_category.clone()
-                        )) {
-                            Err(_) => "".to_owned(),
-                            Ok(f) => f,
-                        };
-                        app.loaded_splits = Vec::new();
+                        app.loaded_category = Some(category);
                         app.num_splits_category = 0;
                     }
                 }
@@ -130,7 +106,10 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
 
     egui::CentralPanel::default().show(ctx, |ui| {
         // The central panel the region left after adding TopPanel's and SidePanel's
-        let selected_game: &mut String = &mut app.selected_game;
+        let selected_game: &mut String = &mut match app.loaded_game.clone() {
+            None => "".to_owned(),
+            Some(loaded) => loaded.uuid,
+        };
 
         ui.heading("Splits");
 
@@ -139,16 +118,9 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             egui::ComboBox::new("game", "")
                 .selected_text(format!(
                     "{}",
-                    if selected_game == "" {
-                        "".to_owned()
-                    } else {
-                        app.config
-                            .game_list
-                            .iter()
-                            .find(|g| g.uuid.eq(selected_game))
-                            .unwrap()
-                            .name
-                            .to_owned()
+                    match app.loaded_game.clone() {
+                        None => "".to_owned(),
+                        Some(loaded) => loaded.name,
                     }
                 ))
                 .show_ui(ui, |ui| {
@@ -163,14 +135,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             )
                             .clicked()
                         {
-                            app.game_str = match std::fs::read_to_string(format!(
-                                "config/games/{selected_game}.json"
-                            )) {
-                                Err(_) => "".to_owned(),
-                                Ok(f) => f.clone(),
-                            };
-                            app.selected_category = "".to_string();
                             app.loaded_category = None;
+                            app.loaded_game = Some(Game::load(selected_game.clone()));
                         }
                     });
                 });
@@ -180,37 +146,26 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             }
         });
 
-        if selected_game != "" {
-            let game: Game = serde_json::from_str(app.game_str.as_str()).unwrap();
-            let selected_category: &mut String = &mut app.selected_category;
-
-            app.loaded_game = Option::Some(SmallGame {
-                uuid: game.uuid,
-                name: game.name,
-            });
+        if let Some(g) = &mut app.loaded_game {
+            let selected_category: &mut String = &mut match app.loaded_category.clone() {
+                None => "".to_owned(),
+                Some(cat) => cat.uuid,
+            };
 
             ui.horizontal(|ui| {
                 ui.label("Category: ");
                 egui::ComboBox::new("category", "")
                     .selected_text(format!(
                         "{}",
-                        if selected_category.clone() == "" {
-                            "".to_owned()
-                        } else {
-                            match game
-                                .categories
-                                .iter()
-                                .find(|cat| cat.uuid == selected_category.clone())
-                            {
-                                None => "".to_owned(),
-                                Some(cat) => cat.name.clone(),
-                            }
+                        match app.loaded_category.clone() {
+                            None => "".to_owned(),
+                            Some(loaded) => loaded.name,
                         }
                     ))
                     .show_ui(ui, |ui| {
                         ui.style_mut().wrap = Some(false);
                         ui.set_min_width(60.0);
-                        game.categories.iter().for_each(|category| {
+                        g.categories.iter().for_each(|category| {
                             if ui
                                 .selectable_value(
                                     selected_category,
@@ -219,17 +174,10 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 )
                                 .clicked()
                             {
-                                app.category_str = match std::fs::read_to_string(format!(
-                                    "config/categories/{}.json",
-                                    selected_category
-                                )) {
-                                    Err(_) => "".to_owned(),
-                                    Ok(f) => f,
-                                };
-                                let tmp_cat: Category =
-                                    serde_json::from_str(app.category_str.as_str()).unwrap();
-                                app.loaded_splits = tmp_cat.splits;
-                                app.num_splits_category = app.loaded_splits.len() as u16;
+                                app.loaded_category =
+                                    Some(Category::load(selected_category.to_string()));
+                                app.num_splits_category =
+                                    app.loaded_category.as_ref().unwrap().splits.len() as u16;
                             };
                         });
                     });
@@ -238,37 +186,25 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                 }
             });
 
-            if app.selected_category.clone() != "".to_owned() {
-                let mut category: Category =
-                    serde_json::from_str(app.category_str.as_str()).unwrap();
-                app.loaded_category = serde_json::from_str(app.category_str.as_str()).unwrap();
-
+            if let Some(c) = &mut app.loaded_category {
                 ui.horizontal(|ui| {
                     ui.label("Number of splits: ");
                     integer_edit_field_u16(ui, &mut app.num_splits_category);
                 });
 
                 if ui.small_button("Create table").clicked() {
-                    let cmp_splits: i16 =
-                        app.loaded_splits.len() as i16 - app.num_splits_category as i16;
+                    let cmp_splits: i16 = c.splits.len() as i16 - app.num_splits_category as i16;
                     if cmp_splits > 0 {
                         for _ in 0..cmp_splits {
-                            app.loaded_splits.pop();
+                            c.splits.pop();
                         }
                     } else {
                         for _ in 0..cmp_splits.abs() {
                             let split = Split::new();
-                            app.loaded_splits.push(split);
+                            c.splits.push(split);
                         }
                     }
-                    category.save();
-                    app.category_str = match std::fs::read_to_string(format!(
-                        "config/categories/{}.json",
-                        app.selected_category.clone()
-                    )) {
-                        Err(_) => "".to_owned(),
-                        Ok(f) => f,
-                    };
+                    c.save();
                 }
 
                 ui.separator();
@@ -299,7 +235,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             });
                         })
                         .body(|mut body| {
-                            app.loaded_splits.iter_mut().for_each(|split: &mut Split| {
+                            c.splits.iter_mut().for_each(|split: &mut Split| {
                                 body.row(18., |mut row| {
                                     row.col(|ui| {
                                         ui.add(
@@ -326,18 +262,18 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     ui.label("Total: ");
                                 });
                                 row.col(|ui| {
-                                    let hits = app.loaded_splits.iter().map(|split| split.hits);
+                                    let hits = c.splits.iter().map(|split| split.hits);
                                     ui.label(hits.sum::<u16>().to_string());
                                 });
                                 row.col(|ui| {
-                                    let diffs = app
-                                        .loaded_splits
+                                    let diffs = c
+                                        .splits
                                         .iter()
                                         .map(|split| i32::from(split.hits) - i32::from(split.pb));
                                     ui.label(diffs.sum::<i32>().to_string());
                                 });
                                 row.col(|ui| {
-                                    let pbs = app.loaded_splits.iter().map(|split| split.pb);
+                                    let pbs = c.splits.iter().map(|split| split.pb);
                                     ui.label(pbs.sum::<u16>().to_string());
                                 });
                             });
@@ -346,7 +282,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
 
                 ui.horizontal(|ui| {
                     if ui.button("Save splits").clicked() {
-                        category.save_splits(app.loaded_splits.to_vec());
+                        c.save();
                     }
                     if ui.button("Open HitSplit counter").clicked() {
                         app.show_hit_counter.store(true, Ordering::Relaxed);

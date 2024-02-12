@@ -35,11 +35,6 @@ impl Category {
             category_str,
         );
     }
-
-    pub fn save_splits(&mut self, splits: Vec<Split>) {
-        self.splits = splits;
-        self.save();
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]

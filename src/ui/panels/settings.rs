@@ -1,4 +1,4 @@
-use crate::{run::category::Category, ui::functions::integer_edit_field_u64, HitSplit};
+use crate::{ui::functions::integer_edit_field_u64, HitSplit};
 
 pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
     egui::CentralPanel::default().show(ctx, |ui| {
@@ -53,10 +53,8 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
 
         if ui.button("Save config").clicked() {
             app.config.save();
-            if app.selected_category != "" {
-                let mut tmp_cat = Category::load(app.selected_category.clone());
-                tmp_cat.splits = app.loaded_splits.clone();
-                tmp_cat.save();
+            if let Some(category) = app.loaded_category.clone() {
+                category.save();
             }
         }
     });
