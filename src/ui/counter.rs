@@ -1,11 +1,8 @@
-use std::sync::atomic::Ordering;
-
 use egui::{Color32, Context};
 
 use crate::HitSplit;
 
 pub fn counter(app: &mut HitSplit, ctx: &Context) {
-    let show_hit_counter = app.show_hit_counter.clone();
     let app_cl = app.clone();
     ctx.show_viewport_immediate(
         egui::ViewportId::from_hash_of("hitsplit_counter"),
@@ -133,9 +130,8 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                 });
             });
             if ctx.input(|i| i.raw.viewport().close_requested()) {
-                // Tell parent to close us.
-                show_hit_counter.store(false, Ordering::Relaxed);
-                ctx.request_repaint(); // make sure there is a next frame
+                app.show_hit_counter = false;
+                ctx.request_repaint();
             }
         },
     );

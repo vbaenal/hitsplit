@@ -1,5 +1,3 @@
-use std::sync::atomic::Ordering;
-
 use egui::{Color32, Context};
 use uuid::Uuid;
 
@@ -285,7 +283,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         c.save();
                     }
                     if ui.button("Open HitSplit counter").clicked() {
-                        app.show_hit_counter.store(true, Ordering::Relaxed);
+                        app.show_hit_counter = true;
                     }
                 });
             } else {
@@ -294,7 +292,6 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             }
         } else {
             ui.separator();
-
             ui.heading("You must select a game to start");
         }
     });

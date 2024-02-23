@@ -5,23 +5,17 @@ use super::{
 use crate::{
     config::{
         config::Config,
-        keybindings::{keybinding_handler, Keybindings},
+        shortcut::{shortcut_handler, Shortcut, ShortcutAction},
     },
     run::{category::Category, game::Game},
 };
 use eframe::{egui::Visuals, Storage};
-use global_hotkey::{hotkey::HotKey, GlobalHotKeyManager};
-use std::{
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    time::Duration,
-};
+use global_hotkey::{hotkey::Code, GlobalHotKeyManager};
+use std::time::Duration;
 
 pub struct HitSplit {
     pub config: Config,
-    pub keybinding: Option<Keybindings>,
+    pub shortcut: Option<Shortcut>,
     pub num_splits_category: u16,
     pub open_page: Pages,
     pub add_game_name: String,
@@ -33,15 +27,16 @@ pub struct HitSplit {
     pub loaded_game: Option<Game>,
     pub loaded_category: Option<Category>,
     pub selected_split: u16,
-    pub show_hit_counter: Arc<AtomicBool>,
+    pub show_hit_counter: bool,
     pub hotkey_manager: Option<GlobalHotKeyManager>,
+    pub capturing: Option<ShortcutAction>,
 }
 
 impl Clone for HitSplit {
     fn clone(&self) -> Self {
         Self {
             config: self.config.clone(),
-            keybinding: self.keybinding.clone(),
+            shortcut: self.shortcut.clone(),
             num_splits_category: self.num_splits_category.clone(),
             open_page: self.open_page.clone(),
             add_game_name: self.add_game_name.clone(),
@@ -55,6 +50,7 @@ impl Clone for HitSplit {
             selected_split: self.selected_split.clone(),
             show_hit_counter: self.show_hit_counter.clone(),
             hotkey_manager: None,
+            capturing: self.capturing.clone(),
         }
     }
 }
@@ -63,7 +59,7 @@ impl Default for HitSplit {
     fn default() -> Self {
         Self {
             config: Default::default(),
-            keybinding: Some(Default::default()),
+            shortcut: Some(Default::default()),
             num_splits_category: 0,
             open_page: Pages::List,
             add_game_name: "".to_string(),
@@ -76,34 +72,38 @@ impl Default for HitSplit {
             loaded_category: None,
             selected_split: 0,
             show_hit_counter: Default::default(),
-            hotkey_manager: Some(GlobalHotKeyManager::new().unwrap()),
+            hotkey_manager: None,
+            capturing: None,
         }
     }
 }
 
 impl HitSplit {
-    fn add_hotkey(&mut self, hotkey: HotKey) {
+    fn add_hotkey(&mut self, code: Code) {
         self.hotkey_manager
             .as_ref()
             .unwrap()
-            .register(hotkey)
+            .register(Shortcut::code_to_hotkey(code))
             .unwrap();
     }
 
     fn manage_hotkeys(&mut self) {
-        if self.keybinding.is_some() && self.hotkey_manager.is_some() {
-            self.add_hotkey(self.keybinding.as_ref().unwrap().prev_split);
-            self.add_hotkey(self.keybinding.as_ref().unwrap().next_split);
-            self.add_hotkey(self.keybinding.as_ref().unwrap().sub_hit);
-            self.add_hotkey(self.keybinding.as_ref().unwrap().add_hit);
-            self.add_hotkey(self.keybinding.as_ref().unwrap().reset);
-            self.add_hotkey(self.keybinding.as_ref().unwrap().set_pb);
+        self.hotkey_manager = Some(GlobalHotKeyManager::new().unwrap());
+        if self.shortcut.is_some() && self.hotkey_manager.is_some() {
+            self.shortcut
+                .clone()
+                .unwrap()
+                .0
+                .iter()
+                .map(|&c| self.add_hotkey(c))
+                .next();
         }
     }
 
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut app: HitSplit = Default::default();
         app.config = Config::load();
+        app.shortcut = Some(Shortcut::load());
         app.manage_hotkeys();
 
         cc.egui_ctx.set_visuals(if app.config.dark_mode {
@@ -121,6 +121,7 @@ impl eframe::App for HitSplit {
     fn save(&mut self, _storage: &mut dyn Storage) {
         if self.config.autosave {
             self.config.save();
+            self.shortcut.as_ref().unwrap().save();
             if let Some(cat) = &self.loaded_category {
                 cat.save();
             }
@@ -134,20 +135,24 @@ impl eframe::App for HitSplit {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.config.dark_mode = (*ctx.style()).clone().visuals.dark_mode;
-        keybinding_handler(self);
-
-        if self.show_hit_counter.load(Ordering::Relaxed) {
-            counter(self, ctx);
+        if let Some(sa) = &self.clone().capturing {
+            if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
+                ShortcutAction::change_shortcut(self, sa, key);
+                self.manage_hotkeys();
+                self.capturing = None;
+            }
         }
 
+        shortcut_handler(self);
         left_panel(self, ctx);
 
-        match self.clone().open_page {
+        match self.open_page {
             Pages::List => list(self, ctx),
             Pages::Settings => configuration(self, ctx),
         }
 
-        if self.show_hit_counter.load(Ordering::Relaxed) {
+        if self.show_hit_counter {
+            counter(self, ctx);
             ctx.request_repaint();
         }
     }
@@ -155,6 +160,7 @@ impl eframe::App for HitSplit {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         if !self.config.autosave {
             self.config.save();
+            self.shortcut.as_ref().unwrap().save();
             if let Some(cat) = &self.loaded_category {
                 cat.save();
             }

@@ -1,4 +1,8 @@
-use crate::{ui::functions::integer_edit_field_u64, HitSplit};
+use crate::{
+    config::shortcut::ShortcutAction,
+    ui::functions::{integer_edit_field_u64, shortcut_button},
+    HitSplit,
+};
 
 pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
     egui::CentralPanel::default().show(ctx, |ui| {
@@ -24,31 +28,30 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         });
 
         ui.separator();
-        ui.heading("Keybindings");
-        ui.label("Work in progress. These are the default keys:");
+        ui.heading("Shortcuts");
         ui.horizontal(|ui| {
             ui.label("Previous split: ");
-            ui.label("NUMPAD8");
+            shortcut_button(app, ui, &ShortcutAction::PrevSplit);
         });
         ui.horizontal(|ui| {
             ui.label("Next split: ");
-            ui.label("NUMPAD2");
+            shortcut_button(app, ui, &ShortcutAction::NextSplit);
         });
         ui.horizontal(|ui| {
             ui.label("Add hit: ");
-            ui.label("NUMPAD7");
+            shortcut_button(app, ui, &ShortcutAction::AddHit);
         });
         ui.horizontal(|ui| {
             ui.label("Substract hit: ");
-            ui.label("NUMPAD9");
+            shortcut_button(app, ui, &ShortcutAction::SubHit);
         });
         ui.horizontal(|ui| {
             ui.label("Reset: ");
-            ui.label("NUMPAD5");
+            shortcut_button(app, ui, &ShortcutAction::Reset);
         });
         ui.horizontal(|ui| {
-            ui.label("Set current table as PB: ");
-            ui.label("NUMPAD3");
+            ui.label("Set current run as PB: ");
+            shortcut_button(app, ui, &ShortcutAction::SetPb);
         });
 
         if ui.button("Save config").clicked() {
