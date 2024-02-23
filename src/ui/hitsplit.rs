@@ -95,8 +95,7 @@ impl HitSplit {
                 .unwrap()
                 .0
                 .iter()
-                .map(|&c| self.add_hotkey(c))
-                .next();
+                .for_each(|&c| self.add_hotkey(c));
         }
     }
 
