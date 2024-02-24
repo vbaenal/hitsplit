@@ -4,10 +4,20 @@
 fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
+    let icon = include_bytes!("../icon.ico");
+    let image = image::load_from_memory(icon).expect("Failed to open icon path").to_rgba8();
+    let (icon_width, icon_height) = image.dimensions();
+
     let native_options = eframe::NativeOptions {
+        
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([400.0, 300.0])
-            .with_min_inner_size([300.0, 220.0]),
+            .with_min_inner_size([300.0, 220.0])
+            .with_icon(egui::IconData { 
+                rgba: image.into_raw(), 
+                width: icon_width, 
+                height: icon_height,
+        }),
         ..Default::default()
     };
     eframe::run_native(
