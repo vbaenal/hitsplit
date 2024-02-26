@@ -12,8 +12,8 @@ pub struct Category {
 impl Category {
     pub fn new(uuid: String, name: String) -> Self {
         Category {
-            uuid: uuid,
-            name: name,
+            uuid,
+            name,
             splits: Vec::new(),
         }
     }

@@ -61,7 +61,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                 .iter()
                                 .enumerate()
                                 .for_each(|(i, split)| {
-                                    let mut label_color = color.clone();
+                                    let mut label_color = color;
                                     if i <= app_cl.selected_split as usize {
                                         if split.hits == 0 {
                                             label_color = Color32::from_rgb(8, 250, 8);

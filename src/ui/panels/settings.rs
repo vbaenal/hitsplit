@@ -1,5 +1,5 @@
 use crate::{
-    config::shortcut::ShortcutAction,
+    settings::shortcut::ShortcutAction,
     ui::functions::{integer_edit_field_u64, shortcut_button},
     HitSplit,
 };

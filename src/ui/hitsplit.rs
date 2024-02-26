@@ -3,11 +3,11 @@ use super::{
     panels::{left_panel, list::list, settings::configuration, Pages},
 };
 use crate::{
-    config::{
+    run::{category::Category, game::Game},
+    settings::{
         config::Config,
         shortcut::{shortcut_handler, Shortcut, ShortcutAction},
     },
-    run::{category::Category, game::Game},
 };
 use eframe::{egui::Visuals, Storage};
 use global_hotkey::{hotkey::Code, GlobalHotKeyManager};
@@ -37,20 +37,20 @@ impl Clone for HitSplit {
         Self {
             config: self.config.clone(),
             shortcut: self.shortcut.clone(),
-            num_splits_category: self.num_splits_category.clone(),
+            num_splits_category: self.num_splits_category,
             open_page: self.open_page.clone(),
             add_game_name: self.add_game_name.clone(),
-            add_game_open: self.add_game_open.clone(),
-            add_game_empty: self.add_game_empty.clone(),
+            add_game_open: self.add_game_open,
+            add_game_empty: self.add_game_empty,
             add_category_name: self.add_category_name.clone(),
-            add_category_open: self.add_category_open.clone(),
-            add_category_empty: self.add_category_empty.clone(),
+            add_category_open: self.add_category_open,
+            add_category_empty: self.add_category_empty,
             loaded_game: self.loaded_game.clone(),
             loaded_category: self.loaded_category.clone(),
-            selected_split: self.selected_split.clone(),
-            show_hit_counter: self.show_hit_counter.clone(),
+            selected_split: self.selected_split,
+            show_hit_counter: self.show_hit_counter,
             hotkey_manager: None,
-            capturing: self.capturing.clone(),
+            capturing: self.capturing,
         }
     }
 }
@@ -100,9 +100,11 @@ impl HitSplit {
     }
 
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let mut app: HitSplit = Default::default();
-        app.config = Config::load();
-        app.shortcut = Some(Shortcut::load());
+        let mut app: HitSplit = HitSplit {
+            config: Config::load(),
+            shortcut: Some(Shortcut::load()),
+            ..Default::default()
+        };
         app.manage_hotkeys();
 
         cc.egui_ctx.set_visuals(if app.config.dark_mode {

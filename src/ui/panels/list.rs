@@ -13,7 +13,7 @@ use crate::{
 
 fn add_game(app: &mut HitSplit, ctx: &Context) {
     egui::Window::new("Add game")
-        .fixed_pos(&[50., 50.])
+        .fixed_pos([50., 50.])
         .resizable(false)
         .open(&mut app.add_game_open.clone())
         .title_bar(false)
@@ -55,7 +55,7 @@ fn add_game(app: &mut HitSplit, ctx: &Context) {
 
 fn add_category(app: &mut HitSplit, ctx: &Context) {
     egui::Window::new("Add category")
-        .fixed_pos(&[50., 50.])
+        .fixed_pos([50., 50.])
         .resizable(false)
         .open(&mut app.add_category_open.clone())
         .title_bar(false)
@@ -114,13 +114,13 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
         ui.horizontal(|ui| {
             ui.label("Game: ");
             egui::ComboBox::new("game", "")
-                .selected_text(format!(
-                    "{}",
-                    match app.loaded_game.clone() {
+                .selected_text(
+                    (match app.loaded_game.clone() {
                         None => "".to_owned(),
                         Some(loaded) => loaded.name,
-                    }
-                ))
+                    })
+                    .to_string(),
+                )
                 .show_ui(ui, |ui| {
                     ui.style_mut().wrap = Some(false);
                     ui.set_min_width(60.0);
@@ -153,13 +153,13 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             ui.horizontal(|ui| {
                 ui.label("Category: ");
                 egui::ComboBox::new("category", "")
-                    .selected_text(format!(
-                        "{}",
-                        match app.loaded_category.clone() {
+                    .selected_text(
+                        (match app.loaded_category.clone() {
                             None => "".to_owned(),
                             Some(loaded) => loaded.name,
-                        }
-                    ))
+                        })
+                        .to_string(),
+                    )
                     .show_ui(ui, |ui| {
                         ui.style_mut().wrap = Some(false);
                         ui.set_min_width(60.0);
@@ -198,7 +198,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         }
                     } else {
                         for _ in 0..cmp_splits.abs() {
-                            let split = Split::new();
+                            let split = Split::default();
                             c.splits.push(split);
                         }
                     }

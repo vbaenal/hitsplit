@@ -11,8 +11,8 @@ pub struct Split {
     pub real_time: Duration,
 }
 
-impl Split {
-    pub fn new() -> Self {
+impl Default for Split {
+    fn default() -> Self {
         Self {
             icon_path: "".to_string(),
             name: "".to_string(),

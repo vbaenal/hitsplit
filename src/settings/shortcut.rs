@@ -46,7 +46,7 @@ impl ShortcutAction {
         }
     }
 
-    pub fn to_function(self) -> impl Fn(&mut HitSplit) -> () {
+    pub fn to_function(self) -> impl Fn(&mut HitSplit) {
         match self {
             ShortcutAction::PrevSplit => prev_split,
             ShortcutAction::NextSplit => next_split,

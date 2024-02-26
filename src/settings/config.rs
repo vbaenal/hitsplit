@@ -12,27 +12,15 @@ pub struct OptionalConfig {
 }
 
 impl OptionalConfig {
-    fn to_config(self) -> Config {
+    fn to_config(&self) -> Config {
         Config {
-            dark_mode: match self.dark_mode {
-                None => true,
-                Some(b) => b,
-            },
-            next_split_as_reset: match self.next_split_as_reset {
-                None => true,
-                Some(b) => b,
-            },
-            autosave: match self.autosave {
-                None => true,
-                Some(b) => b,
-            },
-            autosave_interval: match self.autosave_interval {
-                None => 5,
-                Some(u) => u,
-            },
-            game_list: match self.game_list {
+            dark_mode: self.dark_mode.unwrap_or(true),
+            next_split_as_reset: self.next_split_as_reset.unwrap_or(true),
+            autosave: self.autosave.unwrap_or(true),
+            autosave_interval: self.autosave_interval.unwrap_or(5),
+            game_list: match &self.game_list {
                 None => Vec::new(),
-                Some(v) => v,
+                Some(v) => v.to_vec(),
             },
         }
     }

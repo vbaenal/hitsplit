@@ -12,8 +12,8 @@ pub struct Game {
 impl Game {
     pub fn new(uuid: String, name: String) -> Self {
         Game {
-            uuid: uuid,
-            name: name,
+            uuid,
+            name,
             categories: Vec::new(),
         }
     }
