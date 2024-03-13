@@ -182,11 +182,16 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     Some(Category::load(selected_category.to_string()));
                                 app.num_splits_category =
                                     app.loaded_category.as_ref().unwrap().splits.len() as u16;
-                                app.loaded_category.as_mut().unwrap().splits.iter_mut().for_each(|s| {
-                                    if s.uuid.is_none() {
-                                        s.uuid = Some(Uuid::new_v4().to_string());
-                                    }
-                                });
+                                app.loaded_category
+                                    .as_mut()
+                                    .unwrap()
+                                    .splits
+                                    .iter_mut()
+                                    .for_each(|s| {
+                                        if s.uuid.is_none() {
+                                            s.uuid = Some(Uuid::new_v4().to_string());
+                                        }
+                                    });
                             };
                         });
                     });
@@ -276,22 +281,19 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                 app.open_file_dialog = Some(dialog);
                                                 app.change_split_img = split.uuid.clone();
                                             }
-                                        } else {
-                                            if ui.button("Add image").clicked() {
-                                                let filter = Box::new({
-                                                    move |path: &Path| -> bool {
-                                                        FILE_EXTENSIONS.iter().any(|fe| {
-                                                            fe.map(OsStr::new) == path.extension()
-                                                        })
-                                                    }
-                                                });
-                                                let mut dialog =
-                                                    FileDialog::open_file(None)
-                                                        .show_files_filter(filter);
-                                                dialog.open();
-                                                app.open_file_dialog = Some(dialog);
-                                                app.change_split_img = split.uuid.clone();
-                                            }
+                                        } else if ui.button("Add image").clicked() {
+                                            let filter = Box::new({
+                                                move |path: &Path| -> bool {
+                                                    FILE_EXTENSIONS.iter().any(|fe| {
+                                                        fe.map(OsStr::new) == path.extension()
+                                                    })
+                                                }
+                                            });
+                                            let mut dialog = FileDialog::open_file(None)
+                                                .show_files_filter(filter);
+                                            dialog.open();
+                                            app.open_file_dialog = Some(dialog);
+                                            app.change_split_img = split.uuid.clone();
                                         }
                                     });
                                     row.col(|ui| {
@@ -340,7 +342,14 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     if let Some(dialog) = &mut app.open_file_dialog {
                         if dialog.show(ctx).selected() {
                             if let Some(file) = dialog.path() {
-                                let split = c.splits.iter_mut().find(|s| s.uuid.clone().unwrap() == app.change_split_img.clone().unwrap()).unwrap();
+                                let split = c
+                                    .splits
+                                    .iter_mut()
+                                    .find(|s| {
+                                        s.uuid.clone().unwrap()
+                                            == app.change_split_img.clone().unwrap()
+                                    })
+                                    .unwrap();
                                 split.icon_path = Some(file.to_path_buf());
                                 app.change_split_img = None;
                             }
