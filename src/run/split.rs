@@ -1,24 +1,22 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Split {
-    pub icon_path: String,
+    pub uuid: Option<String>,
+    pub icon_path: Option<PathBuf>,
     pub name: String,
     pub hits: u16,
     pub pb: u16,
     pub real_time: Duration,
 }
 
-impl Default for Split {
-    fn default() -> Self {
+impl Split {
+    pub fn new(uuid: Option<String>) -> Self {
         Self {
-            icon_path: "".to_string(),
-            name: "".to_string(),
-            hits: 0,
-            pb: 0,
-            real_time: Duration::default(),
+            uuid,
+            ..Default::default()
         }
     }
 }

@@ -1,4 +1,4 @@
-use egui::{Color32, Context};
+use egui::{Color32, Context, Vec2};
 
 use crate::HitSplit;
 
@@ -27,6 +27,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                         .cell_layout(egui::Layout::left_to_right(egui::Align::LEFT))
                         .resizable(true)
                         .striped(false)
+                        .column(egui_extras::Column::auto().at_most(16.0))
                         .column(egui_extras::Column::auto().at_least(150.0))
                         .column(egui_extras::Column::auto().at_most(22.0))
                         .column(egui_extras::Column::auto().at_most(22.0))
@@ -39,6 +40,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                     }
                     table
                         .header(20.0, |mut header| {
+                            header.col(|_| {});
                             header.col(|ui| {
                                 ui.strong("Name");
                             });
@@ -77,6 +79,15 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                             name = format!("> {}", name);
                                         }
                                         row.col(|ui| {
+                                            if let Some(p) = &split.icon_path {
+                                                let path = p.as_path().to_str().unwrap();
+                                                ui.add(
+                                                    egui::Image::new(format!("file://{path}"))
+                                                        .max_size(Vec2::new(16.0, 16.0)),
+                                                );
+                                            }
+                                        });
+                                        row.col(|ui| {
                                             ui.colored_label(label_color, name);
                                         });
                                         row.col(|ui| {
@@ -95,6 +106,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                     });
                                 });
                             body.row(24., |mut row| {
+                                row.col(|_| {});
                                 row.col(|ui| {
                                     ui.colored_label(color, "Total: ");
                                 });

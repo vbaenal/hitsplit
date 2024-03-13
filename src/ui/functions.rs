@@ -1,10 +1,15 @@
 use crate::{settings::shortcut::ShortcutAction, HitSplit};
 
-pub fn image_button(image_src: egui::ImageSource<'_>) -> egui::ImageButton<'_> {
+pub fn image_button<'a>(
+    image_src: impl Into<egui::ImageSource<'a>>,
+    width: f32,
+    height: f32,
+    rounding: f32,
+) -> egui::ImageButton<'a> {
     egui::widgets::ImageButton::new(
         egui::Image::new(image_src)
-            .max_size(egui::Vec2::new(64.0, 64.0))
-            .rounding(10.0),
+            .max_size(egui::Vec2::new(width, height))
+            .rounding(rounding),
     )
 }
 

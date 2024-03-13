@@ -1,4 +1,7 @@
+use std::{ffi::OsStr, path::Path};
+
 use egui::{Color32, Context};
+use egui_file::FileDialog;
 use uuid::Uuid;
 
 use crate::{
@@ -7,9 +10,12 @@ use crate::{
         game::{Game, SmallGame},
         split::Split,
     },
-    ui::functions::integer_edit_field_u16,
+    ui::functions::{image_button, integer_edit_field_u16},
     HitSplit,
 };
+
+const FILE_EXTENSIONS: [Option<&'static str>; 4] =
+    [Some("png"), Some("jpg"), Some("jpeg"), Some("gif")];
 
 fn add_game(app: &mut HitSplit, ctx: &Context) {
     egui::Window::new("Add game")
@@ -176,6 +182,11 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     Some(Category::load(selected_category.to_string()));
                                 app.num_splits_category =
                                     app.loaded_category.as_ref().unwrap().splits.len() as u16;
+                                app.loaded_category.as_mut().unwrap().splits.iter_mut().for_each(|s| {
+                                    if s.uuid.is_none() {
+                                        s.uuid = Some(Uuid::new_v4().to_string());
+                                    }
+                                });
                             };
                         });
                     });
@@ -198,7 +209,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         }
                     } else {
                         for _ in 0..cmp_splits.abs() {
-                            let split = Split::default();
+                            let split = Split::new(Some(Uuid::new_v4().to_string()));
                             c.splits.push(split);
                         }
                     }
@@ -211,6 +222,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .striped(true)
                         .cell_layout(egui::Layout::left_to_right(egui::Align::LEFT))
                         .resizable(true)
+                        .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::initial(100.0))
                         .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::auto())
@@ -219,6 +231,9 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
 
                     table
                         .header(20.0, |mut header| {
+                            header.col(|ui| {
+                                ui.strong("Image");
+                            });
                             header.col(|ui| {
                                 ui.strong("Name");
                             });
@@ -235,6 +250,50 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .body(|mut body| {
                             c.splits.iter_mut().for_each(|split: &mut Split| {
                                 body.row(18., |mut row| {
+                                    row.col(|ui| {
+                                        if let Some(p) = &split.icon_path {
+                                            let path = p.to_str().unwrap();
+                                            if ui
+                                                .add(image_button(
+                                                    format!("file://{path}"),
+                                                    16.0,
+                                                    16.0,
+                                                    0.0,
+                                                ))
+                                                .clicked()
+                                            {
+                                                let filter = Box::new({
+                                                    move |path: &Path| -> bool {
+                                                        FILE_EXTENSIONS.iter().any(|fe| {
+                                                            fe.map(OsStr::new) == path.extension()
+                                                        })
+                                                    }
+                                                });
+                                                let mut dialog =
+                                                    FileDialog::open_file(Some(p.to_path_buf()))
+                                                        .show_files_filter(filter);
+                                                dialog.open();
+                                                app.open_file_dialog = Some(dialog);
+                                                app.change_split_img = split.uuid.clone();
+                                            }
+                                        } else {
+                                            if ui.button("Add image").clicked() {
+                                                let filter = Box::new({
+                                                    move |path: &Path| -> bool {
+                                                        FILE_EXTENSIONS.iter().any(|fe| {
+                                                            fe.map(OsStr::new) == path.extension()
+                                                        })
+                                                    }
+                                                });
+                                                let mut dialog =
+                                                    FileDialog::open_file(None)
+                                                        .show_files_filter(filter);
+                                                dialog.open();
+                                                app.open_file_dialog = Some(dialog);
+                                                app.change_split_img = split.uuid.clone();
+                                            }
+                                        }
+                                    });
                                     row.col(|ui| {
                                         ui.add(
                                             egui::TextEdit::singleline(&mut split.name)
@@ -256,6 +315,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 });
                             });
                             body.row(24., |mut row| {
+                                row.col(|_| {});
                                 row.col(|ui| {
                                     ui.label("Total: ");
                                 });
@@ -276,6 +336,16 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 });
                             });
                         });
+
+                    if let Some(dialog) = &mut app.open_file_dialog {
+                        if dialog.show(ctx).selected() {
+                            if let Some(file) = dialog.path() {
+                                let split = c.splits.iter_mut().find(|s| s.uuid.clone().unwrap() == app.change_split_img.clone().unwrap()).unwrap();
+                                split.icon_path = Some(file.to_path_buf());
+                                app.change_split_img = None;
+                            }
+                        }
+                    }
                 });
 
                 ui.horizontal(|ui| {

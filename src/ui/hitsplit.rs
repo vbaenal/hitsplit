@@ -10,8 +10,9 @@ use crate::{
     },
 };
 use eframe::{egui::Visuals, Storage};
+use egui_file::FileDialog;
 use global_hotkey::{hotkey::Code, GlobalHotKeyManager};
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 pub struct HitSplit {
     pub config: Config,
@@ -30,6 +31,9 @@ pub struct HitSplit {
     pub show_hit_counter: bool,
     pub hotkey_manager: Option<GlobalHotKeyManager>,
     pub capturing: Option<ShortcutAction>,
+    pub opened_file: Option<PathBuf>,
+    pub open_file_dialog: Option<FileDialog>,
+    pub change_split_img: Option<String>,
 }
 
 impl Clone for HitSplit {
@@ -51,6 +55,9 @@ impl Clone for HitSplit {
             show_hit_counter: self.show_hit_counter,
             hotkey_manager: None,
             capturing: self.capturing,
+            opened_file: self.opened_file.clone(),
+            open_file_dialog: None,
+            change_split_img: None,
         }
     }
 }
@@ -74,6 +81,9 @@ impl Default for HitSplit {
             show_hit_counter: Default::default(),
             hotkey_manager: None,
             capturing: None,
+            opened_file: None,
+            open_file_dialog: None,
+            change_split_img: None,
         }
     }
 }

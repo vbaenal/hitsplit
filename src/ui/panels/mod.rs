@@ -13,6 +13,10 @@ pub enum Pages {
     Settings,
 }
 
+const WIDTH: f32 = 64.0;
+const HEIGHT: f32 = 64.0;
+const ROUNDING: f32 = 10.0;
+
 pub fn left_panel(app: &mut HitSplit, ctx: &Context) {
     egui::SidePanel::left("left_panel")
         .exact_width(72.)
@@ -28,9 +32,15 @@ pub fn left_panel(app: &mut HitSplit, ctx: &Context) {
                 config_button = egui::include_image!("../../assets/light_mode/config.svg");
             }
 
-            if ui.add(image_button(list_button)).clicked() {
+            if ui
+                .add(image_button(list_button, WIDTH, HEIGHT, ROUNDING))
+                .clicked()
+            {
                 app.open_page = Pages::List;
-            } else if ui.add(image_button(config_button)).clicked() {
+            } else if ui
+                .add(image_button(config_button, WIDTH, HEIGHT, ROUNDING))
+                .clicked()
+            {
                 app.open_page = Pages::Settings;
             }
         });
