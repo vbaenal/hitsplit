@@ -1,6 +1,8 @@
+use egui::Slider;
+
 use crate::{
     settings::shortcut::ShortcutAction,
-    ui::functions::{integer_edit_field_u64, shortcut_button},
+    ui::functions::{numeric_edit_field_u64, shortcut_button},
     HitSplit,
 };
 
@@ -18,7 +20,7 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         if app.config.autosave {
             ui.horizontal(|ui| {
                 ui.label("Autosave interval: ");
-                integer_edit_field_u64(ui, &mut app.config.autosave_interval, 30.0);
+                numeric_edit_field_u64(ui, &mut app.config.autosave_interval, 30.0);
                 ui.label("seconds");
             });
         }
@@ -26,7 +28,10 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
             ui.label("Next split as reset on last split: ");
             ui.checkbox(&mut app.config.next_split_as_reset, "");
         });
-
+        ui.horizontal(|ui| {
+            ui.label("Text font size");
+            ui.add(Slider::new(&mut app.config.font_size, 1.0..=100.0));
+        });
         ui.separator();
         ui.heading("Shortcuts");
         ui.horizontal(|ui| {

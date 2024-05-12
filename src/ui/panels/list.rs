@@ -10,7 +10,7 @@ use crate::{
         game::{Game, SmallGame},
         split::Split,
     },
-    ui::functions::{image_button, integer_edit_field_u16},
+    ui::functions::{image_button, numeric_edit_field_u16},
     HitSplit,
 };
 
@@ -203,7 +203,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             if let Some(c) = &mut app.loaded_category {
                 ui.horizontal(|ui| {
                     ui.label("Number of splits: ");
-                    integer_edit_field_u16(ui, &mut app.num_splits_category);
+                    numeric_edit_field_u16(ui, &mut app.num_splits_category);
                 });
 
                 if ui.small_button("Create table").clicked() {
@@ -303,7 +303,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                         );
                                     });
                                     row.col(|ui| {
-                                        integer_edit_field_u16(ui, &mut split.hits);
+                                        numeric_edit_field_u16(ui, &mut split.hits);
                                     });
                                     row.col(|ui| {
                                         ui.label(
@@ -312,7 +312,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                         );
                                     });
                                     row.col(|ui| {
-                                        integer_edit_field_u16(ui, &mut split.pb);
+                                        numeric_edit_field_u16(ui, &mut split.pb);
                                     });
                                 });
                             });
@@ -342,15 +342,11 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     if let Some(dialog) = &mut app.open_file_dialog {
                         if dialog.show(ctx).selected() {
                             if let Some(file) = dialog.path() {
-                                let split = c
-                                    .splits
-                                    .iter_mut()
-                                    .find(|s| {
-                                        s.uuid.clone().unwrap()
-                                            == app.change_split_img.clone().unwrap()
-                                    })
-                                    .unwrap();
-                                split.icon_path = Some(file.to_path_buf());
+                                if let Some(split) = c.splits.iter_mut().find(|s| {
+                                    s.uuid.clone().unwrap() == app.change_split_img.clone().unwrap()
+                                }) {
+                                    split.icon_path = Some(file.to_path_buf());
+                                }
                                 app.change_split_img = None;
                             }
                         }

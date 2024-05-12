@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use eframe::{egui::Visuals, Storage};
+use egui::TextStyle;
 use egui_file::FileDialog;
 use global_hotkey::{hotkey::Code, GlobalHotKeyManager};
 use std::{path::PathBuf, time::Duration};
@@ -145,7 +146,8 @@ impl eframe::App for HitSplit {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.config.dark_mode = (*ctx.style()).clone().visuals.dark_mode;
+        let mut style = (*ctx.style()).clone();
+        self.config.dark_mode = style.visuals.dark_mode;
         if let Some(sa) = &self.clone().capturing {
             if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
                 ShortcutAction::change_shortcut(self, sa, key);
@@ -163,7 +165,11 @@ impl eframe::App for HitSplit {
         }
 
         if self.show_hit_counter {
+            let prev_style = style.clone();
+            style.text_styles.get_mut(&TextStyle::Body).unwrap().size = self.config.font_size;
+            ctx.set_style(style);
             counter(self, ctx);
+            ctx.set_style(prev_style);
             ctx.request_repaint();
         }
     }

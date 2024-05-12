@@ -9,6 +9,7 @@ pub struct OptionalConfig {
     autosave: Option<bool>,
     autosave_interval: Option<u64>,
     game_list: Option<Vec<SmallGame>>,
+    font_size: Option<f32>,
 }
 
 impl OptionalConfig {
@@ -22,6 +23,7 @@ impl OptionalConfig {
                 None => Vec::new(),
                 Some(v) => v.to_vec(),
             },
+            font_size: self.font_size.unwrap_or(14.0),
         }
     }
 }
@@ -33,6 +35,7 @@ pub struct Config {
     pub autosave: bool,
     pub autosave_interval: u64,
     pub game_list: Vec<SmallGame>,
+    pub font_size: f32,
 }
 
 impl Default for Config {
@@ -43,6 +46,7 @@ impl Default for Config {
             autosave: true,
             autosave_interval: 5,
             game_list: Vec::new(),
+            font_size: 14.0,
         }
     }
 }

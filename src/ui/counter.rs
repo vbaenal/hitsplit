@@ -1,4 +1,4 @@
-use egui::{Color32, Context, Vec2};
+use egui::{Color32, Context};
 
 use crate::HitSplit;
 
@@ -24,14 +24,16 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                 ui.vertical(|ui| {
                     let table = egui_extras::TableBuilder::new(ui)
                         .striped(false)
-                        .cell_layout(egui::Layout::left_to_right(egui::Align::LEFT))
+                        .cell_layout(egui::Layout::centered_and_justified(
+                            egui::Direction::LeftToRight,
+                        ))
                         .resizable(true)
                         .striped(false)
-                        .column(egui_extras::Column::auto().at_most(16.0))
-                        .column(egui_extras::Column::auto().at_least(150.0))
-                        .column(egui_extras::Column::auto().at_most(22.0))
-                        .column(egui_extras::Column::auto().at_most(22.0))
-                        .column(egui_extras::Column::auto().at_most(22.0))
+                        .column(egui_extras::Column::exact(app.config.font_size))
+                        .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::auto())
                         .min_scrolled_height(200.0);
                     let mut color = Color32::from_rgb(250, 250, 250);
                     let style: egui::Style = (*ctx.style()).clone();
@@ -39,7 +41,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                         color = Color32::from_rgb(8, 8, 8)
                     }
                     table
-                        .header(20.0, |mut header| {
+                        .header(app.config.font_size + 5.0, |mut header| {
                             header.col(|_| {});
                             header.col(|ui| {
                                 ui.strong("Name");
@@ -73,7 +75,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                             label_color = Color32::from_rgb(250, 8, 8);
                                         }
                                     }
-                                    body.row(18., |mut row| {
+                                    body.row(app.config.font_size + 5.0, |mut row| {
                                         let mut name = split.name.clone();
                                         if i == app_cl.selected_split as usize {
                                             name = format!("> {}", name);
@@ -83,7 +85,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                                 let path = p.as_path().to_str().unwrap();
                                                 ui.add(
                                                     egui::Image::new(format!("file://{path}"))
-                                                        .max_size(Vec2::new(16.0, 16.0)),
+                                                        .max_height(app.config.font_size),
                                                 );
                                             }
                                         });
@@ -105,7 +107,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                         });
                                     });
                                 });
-                            body.row(24., |mut row| {
+                            body.row(app.config.font_size + 5.0, |mut row| {
                                 row.col(|_| {});
                                 row.col(|ui| {
                                     ui.colored_label(color, "Total: ");
