@@ -279,7 +279,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                         .show_files_filter(filter);
                                                 dialog.open();
                                                 app.open_file_dialog = Some(dialog);
-                                                app.change_split_img = split.uuid.clone();
+                                                app.change_split_img.clone_from(&split.uuid);
                                             }
                                         } else if ui.button("Add image").clicked() {
                                             let filter = Box::new({
@@ -293,7 +293,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                 .show_files_filter(filter);
                                             dialog.open();
                                             app.open_file_dialog = Some(dialog);
-                                            app.change_split_img = split.uuid.clone();
+                                            app.change_split_img.clone_from(&split.uuid);
                                         }
                                     });
                                     row.col(|ui| {
