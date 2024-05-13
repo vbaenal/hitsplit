@@ -18,7 +18,7 @@ use std::{path::PathBuf, time::Duration};
 pub struct HitSplit {
     pub config: Config,
     pub shortcut: Option<Shortcut>,
-    pub num_splits_category: u16,
+    pub num_splits_category: usize,
     pub open_page: Pages,
     pub add_game_name: String,
     pub add_game_open: bool,
@@ -28,7 +28,7 @@ pub struct HitSplit {
     pub add_category_empty: bool,
     pub loaded_game: Option<Game>,
     pub loaded_category: Option<Category>,
-    pub selected_split: u16,
+    pub selected_split: usize,
     pub show_hit_counter: bool,
     pub hotkey_manager: Option<GlobalHotKeyManager>,
     pub capturing: Option<ShortcutAction>,

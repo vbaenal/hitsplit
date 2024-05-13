@@ -1,3 +1,5 @@
+use std::fs::read_dir;
+
 use serde::{Deserialize, Serialize};
 
 use crate::run::game::SmallGame;
@@ -10,6 +12,8 @@ pub struct OptionalConfig {
     autosave_interval: Option<u64>,
     game_list: Option<Vec<SmallGame>>,
     font_size: Option<f32>,
+    limit_splits_shown: Option<bool>,
+    num_splits_counter: Option<usize>,
 }
 
 impl OptionalConfig {
@@ -24,6 +28,8 @@ impl OptionalConfig {
                 Some(v) => v.to_vec(),
             },
             font_size: self.font_size.unwrap_or(14.0),
+            limit_splits_shown: self.limit_splits_shown.unwrap_or(false),
+            num_splits_counter: self.num_splits_counter.unwrap_or(10),
         }
     }
 }
@@ -36,6 +42,8 @@ pub struct Config {
     pub autosave_interval: u64,
     pub game_list: Vec<SmallGame>,
     pub font_size: f32,
+    pub limit_splits_shown: bool,
+    pub num_splits_counter: usize,
 }
 
 impl Default for Config {
@@ -47,6 +55,8 @@ impl Default for Config {
             autosave_interval: 5,
             game_list: Vec::new(),
             font_size: 14.0,
+            limit_splits_shown: false,
+            num_splits_counter: 0,
         }
     }
 }
@@ -58,29 +68,17 @@ impl Config {
     }
 
     pub fn load() -> Self {
-        match std::fs::read_dir("config") {
-            Err(_) => {
-                let _ = std::fs::create_dir("config");
-                true
-            }
-            Ok(_) => true,
-        };
+        if read_dir("config").is_err() {
+            let _ = std::fs::create_dir("config");
+        }
 
-        match std::fs::read_dir("config/games") {
-            Err(_) => {
-                let _ = std::fs::create_dir("config/games");
-                true
-            }
-            Ok(_) => true,
-        };
+        if read_dir("config/games").is_err() {
+            let _ = std::fs::create_dir("config/games");
+        }
 
-        match std::fs::read_dir("config/categories") {
-            Err(_) => {
-                let _ = std::fs::create_dir("config/categories");
-                true
-            }
-            Ok(_) => true,
-        };
+        if read_dir("config/categories").is_err() {
+            let _ = std::fs::create_dir("config/categories");
+        }
 
         let config_json: String = match std::fs::read_to_string("config/config.json") {
             Err(_) => {

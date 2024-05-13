@@ -5,7 +5,7 @@ description = "HitSplit is a multiplatform tool for keeping track of your no-hit
 authors = ["Víctor Baena <vicbaeluq@gmail.com>"]
 build = "build.rs"
 edition = "2021"
-rust-version = "1.76"
+rust-version = "1.78"
 license = "Apache-2.0"
 
 [dependencies]
@@ -16,6 +16,7 @@ global-hotkey = "0.5"
 eframe = { version = "0.27", default-features = false, features = [
     "default_fonts",
     "glow",
+    "persistence",
 ] }
 image = { version = "0.25", features = ["jpeg", "png"] }
 uuid = { version = "1", features = ["v4", "fast-rng"]}

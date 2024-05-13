@@ -10,7 +10,7 @@ use crate::{
         game::{Game, SmallGame},
         split::Split,
     },
-    ui::functions::{image_button, numeric_edit_field_u16},
+    ui::functions::{image_button, numeric_edit_field_u16, numeric_edit_field_usize},
     HitSplit,
 };
 
@@ -181,7 +181,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 app.loaded_category =
                                     Some(Category::load(selected_category.to_string()));
                                 app.num_splits_category =
-                                    app.loaded_category.as_ref().unwrap().splits.len() as u16;
+                                    app.loaded_category.as_ref().unwrap().splits.len();
                                 app.loaded_category
                                     .as_mut()
                                     .unwrap()
@@ -203,7 +203,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
             if let Some(c) = &mut app.loaded_category {
                 ui.horizontal(|ui| {
                     ui.label("Number of splits: ");
-                    numeric_edit_field_u16(ui, &mut app.num_splits_category);
+                    numeric_edit_field_usize(ui, &mut app.num_splits_category);
                 });
 
                 if ui.small_button("Create table").clicked() {

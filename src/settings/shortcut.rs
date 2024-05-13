@@ -1,3 +1,5 @@
+use std::fs::read_dir;
+
 use egui::Key;
 use global_hotkey::{
     hotkey::{Code, HotKey},
@@ -83,25 +85,21 @@ impl Default for Shortcut {
 
 impl Shortcut {
     pub fn save(&self) {
-        let config_str = serde_json::to_string(self).unwrap();
-        let _ = std::fs::write("config/shortcuts.json", config_str);
+        let shortcuts_str = serde_json::to_string(self).unwrap();
+        std::fs::write("config/shortcuts.json", shortcuts_str).unwrap();
     }
 
     pub fn load() -> Self {
-        match std::fs::read_dir("config") {
-            Err(_) => {
-                let _ = std::fs::create_dir("config");
-                true
-            }
-            Ok(_) => true,
-        };
+        if read_dir("config").is_err() {
+            std::fs::create_dir("config").unwrap();
+        }
 
         let shortcuts_json: String = match std::fs::read_to_string("config/shortcuts.json") {
             Err(_) => {
                 let tmp: Shortcut = Default::default();
-                let config_str = serde_json::to_string(&tmp).unwrap();
-                let _ = std::fs::write("config/config.json", config_str.clone());
-                config_str
+                let shortcuts_str = serde_json::to_string(&tmp).unwrap();
+                std::fs::write("config/shortcuts.json", shortcuts_str.clone()).unwrap();
+                shortcuts_str
             }
             Ok(f) => f,
         };

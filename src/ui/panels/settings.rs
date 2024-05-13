@@ -29,9 +29,19 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
             ui.checkbox(&mut app.config.next_split_as_reset, "");
         });
         ui.horizontal(|ui| {
-            ui.label("Text font size");
+            ui.label("Text font size: ");
             ui.add(Slider::new(&mut app.config.font_size, 1.0..=100.0));
         });
+        ui.horizontal(|ui| {
+            ui.label("Show a limited number of splits: ");
+            ui.checkbox(&mut app.config.limit_splits_shown, "");
+        });
+        if app.config.limit_splits_shown {
+            ui.horizontal(|ui| {
+                ui.label("Number of splits shown: ");
+                ui.add(Slider::new(&mut app.config.num_splits_counter, 1..=25));
+            });
+        }
         ui.separator();
         ui.heading("Shortcuts");
         ui.horizontal(|ui| {
@@ -61,6 +71,7 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
 
         if ui.button("Save config").clicked() {
             app.config.save();
+            app.shortcut.as_ref().unwrap().save();
             if let Some(category) = app.loaded_category.clone() {
                 category.save();
             }

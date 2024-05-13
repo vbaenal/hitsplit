@@ -7,7 +7,7 @@ pub fn prev_split(app: &mut HitSplit) {
 }
 
 pub fn next_split(app: &mut HitSplit) {
-    if app.loaded_category.as_ref().unwrap().splits.len() > app.selected_split as usize + 1 {
+    if app.loaded_category.as_ref().unwrap().splits.len() > app.selected_split + 1 {
         app.selected_split += 1;
     } else if app.config.next_split_as_reset {
         app.selected_split = 0;
@@ -47,7 +47,7 @@ pub fn sub_hit(app: &mut HitSplit) {
         .as_mut()
         .unwrap()
         .splits
-        .get_mut(app.selected_split as usize)
+        .get_mut(app.selected_split)
         .unwrap();
     if split.hits > 0 {
         split.hits -= 1;
@@ -59,7 +59,7 @@ pub fn add_hit(app: &mut HitSplit) {
         .as_mut()
         .unwrap()
         .splits
-        .get_mut(app.selected_split as usize)
+        .get_mut(app.selected_split)
         .unwrap()
         .hits += 1;
 }
