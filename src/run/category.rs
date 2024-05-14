@@ -35,10 +35,20 @@ impl Category {
             category_str,
         );
     }
+
+    pub fn change_name(&mut self, new_name: &str) {
+        new_name.clone_into(&mut self.name)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SmallCategory {
     pub uuid: String,
     pub name: String,
+}
+
+impl SmallCategory {
+    pub fn change_name(&mut self, new_name: &str) {
+        new_name.clone_into(&mut self.name)
+    }
 }

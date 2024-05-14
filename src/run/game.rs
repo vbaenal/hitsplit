@@ -18,6 +18,10 @@ impl Game {
         }
     }
 
+    pub fn change_name(&mut self, new_name: &str) {
+        new_name.clone_into(&mut self.name)
+    }
+
     pub fn save(&self) {
         let game_str = serde_json::to_string(&self).unwrap();
         let _ = std::fs::write(format!("config/games/{}.json", self.uuid), game_str);
@@ -37,4 +41,10 @@ impl Game {
 pub struct SmallGame {
     pub uuid: String,
     pub name: String,
+}
+
+impl SmallGame {
+    pub fn change_name(&mut self, new_name: &str) {
+        new_name.clone_into(&mut self.name)
+    }
 }

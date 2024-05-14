@@ -14,8 +14,7 @@ use crate::{
     HitSplit,
 };
 
-const FILE_EXTENSIONS: [Option<&'static str>; 4] =
-    [Some("png"), Some("jpg"), Some("jpeg"), Some("gif")];
+const FILE_EXTENSIONS: [Option<&'static str>; 3] = [Some("png"), Some("jpg"), Some("jpeg")];
 
 fn add_game(app: &mut HitSplit, ctx: &Context) {
     egui::Window::new("Add game")
@@ -59,6 +58,47 @@ fn add_game(app: &mut HitSplit, ctx: &Context) {
         });
 }
 
+fn modify_game(app: &mut HitSplit, ctx: &Context) {
+    egui::Window::new("Modify game name")
+        .fixed_pos([50., 50.])
+        .resizable(false)
+        .open(&mut app.modify_game_open.clone())
+        .title_bar(false)
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| ui.label("Enter the new name of the game"));
+            if app.add_game_empty {
+                ui.colored_label(Color32::from_rgb(250, 8, 8), "You must enter a game name!");
+            }
+            ui.horizontal(|ui| ui.add(egui::TextEdit::singleline(&mut app.add_game_name)));
+            ui.horizontal(|ui| {
+                if ui.small_button("Change name").clicked() {
+                    if app.add_game_name.eq("") {
+                        app.add_game_empty = true;
+                    } else {
+                        let game = app.loaded_game.as_mut().unwrap();
+                        game.change_name(&app.add_game_name);
+                        app.config
+                            .game_list
+                            .iter_mut()
+                            .find(|sg| sg.uuid == game.uuid)
+                            .unwrap()
+                            .change_name(&app.add_game_name);
+                        game.save();
+                        app.add_game_name = "".to_string();
+                        app.add_game_empty = false;
+                        app.modify_game_open = false;
+                        app.config.save();
+                    }
+                }
+                if ui.small_button("Cancel").clicked() {
+                    app.add_game_name = "".to_string();
+                    app.add_game_empty = false;
+                    app.modify_game_open = false;
+                }
+            })
+        });
+}
+
 fn add_category(app: &mut HitSplit, ctx: &Context) {
     egui::Window::new("Add category")
         .fixed_pos([50., 50.])
@@ -79,7 +119,7 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
                     if app.add_category_name.eq("") {
                         app.add_category_empty = true;
                     } else {
-                        let mut game: Game = app.loaded_game.as_ref().unwrap().clone();
+                        let game: &mut Game = app.loaded_game.as_mut().unwrap();
                         let uuid: String = Uuid::new_v4().to_string();
                         app.add_category_open = false;
                         game.categories.push(SmallCategory {
@@ -104,9 +144,53 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
         });
 }
 
+fn modify_category(app: &mut HitSplit, ctx: &Context) {
+    egui::Window::new("Modify category name")
+        .fixed_pos([50., 50.])
+        .resizable(false)
+        .open(&mut app.modify_category_open.clone())
+        .title_bar(false)
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| ui.label("Enter the new name of the category"));
+            if app.add_category_empty {
+                ui.colored_label(Color32::from_rgb(250, 8, 8), "You must enter a category name!");
+            }
+            ui.horizontal(|ui| ui.add(egui::TextEdit::singleline(&mut app.add_category_name)));
+            ui.horizontal(|ui| {
+                if ui.small_button("Change name").clicked() {
+                    if app.add_category_name.eq("") {
+                        app.add_category_empty = true;
+                    } else {
+                        let game: &mut Game = app.loaded_game.as_mut().unwrap();
+                        let category = app.loaded_category.as_mut().unwrap();
+                        category.change_name(&app.add_category_name);
+                        game.categories
+                            .iter_mut()
+                            .find(|sg| sg.uuid == category.uuid)
+                            .unwrap()
+                            .change_name(&app.add_category_name);
+                        category.save();
+                        app.add_category_name = "".to_string();
+                        app.add_category_empty = false;
+                        game.save();
+                        category.save();
+                        app.modify_category_open = false;
+                    }
+                }
+                if ui.small_button("Cancel").clicked() {
+                    app.add_category_name = "".to_string();
+                    app.add_category_empty = false;
+                    app.modify_category_open = false;
+                }
+            })
+        });
+}
+
 pub fn list(app: &mut HitSplit, ctx: &Context) {
     add_game(app, ctx);
+    modify_game(app, ctx);
     add_category(app, ctx);
+    modify_category(app, ctx);
 
     egui::CentralPanel::default().show(ctx, |ui| {
         // The central panel the region left after adding TopPanel's and SidePanel's
@@ -147,6 +231,9 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
 
             if ui.small_button("Add game").clicked() {
                 app.add_game_open = true;
+            }
+            if app.loaded_game.is_some() && ui.small_button("Modify game name").clicked() {
+                app.modify_game_open = true;
             }
         });
 
@@ -197,6 +284,11 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     });
                 if ui.small_button("Add category").clicked() {
                     app.add_category_open = true;
+                }
+                if app.loaded_category.is_some()
+                    && ui.small_button("Modify category name").clicked()
+                {
+                    app.modify_category_open = true;
                 }
             });
 
