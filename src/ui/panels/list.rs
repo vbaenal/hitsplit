@@ -153,7 +153,10 @@ fn modify_category(app: &mut HitSplit, ctx: &Context) {
         .show(ctx, |ui| {
             ui.horizontal(|ui| ui.label("Enter the new name of the category"));
             if app.add_category_empty {
-                ui.colored_label(Color32::from_rgb(250, 8, 8), "You must enter a category name!");
+                ui.colored_label(
+                    Color32::from_rgb(250, 8, 8),
+                    "You must enter a category name!",
+                );
             }
             ui.horizontal(|ui| ui.add(egui::TextEdit::singleline(&mut app.add_category_name)));
             ui.horizontal(|ui| {
