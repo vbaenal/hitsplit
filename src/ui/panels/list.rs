@@ -327,6 +327,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::initial(24.0))
+                        .column(egui_extras::Column::initial(24.0))
                         .min_scrolled_height(0.0);
 
                     table
@@ -346,10 +348,16 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             header.col(|ui| {
                                 ui.strong("PB");
                             });
+                            header.col(|ui| {
+                                ui.strong("");
+                            });
+                            header.col(|ui| {
+                                ui.strong("");
+                            });
                         })
                         .body(|mut body| {
-                            c.splits.iter_mut().for_each(|split: &mut Split| {
-                                body.row(18., |mut row| {
+                            c.splits.iter_mut().enumerate().for_each(|(i, split)| {
+                                body.row(24., |mut row| {
                                     row.col(|ui| {
                                         if let Some(p) = &split.icon_path {
                                             let path = p.to_str().unwrap();
@@ -414,6 +422,39 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     row.col(|ui| {
                                         numeric_edit_field_u16(ui, &mut split.pb);
                                     });
+
+                                    let add_split_button;
+                                    let remove_split_button;
+                                    if app.config.dark_mode {
+                                        add_split_button =
+                                            egui::include_image!("../../assets/dark_mode/add.png");
+                                        remove_split_button = egui::include_image!(
+                                            "../../assets/dark_mode/remove.png"
+                                        );
+                                    } else {
+                                        add_split_button =
+                                            egui::include_image!("../../assets/light_mode/add.png");
+                                        remove_split_button = egui::include_image!(
+                                            "../../assets/light_mode/remove.png"
+                                        );
+                                    }
+
+                                    row.col(|ui| {
+                                        if ui
+                                            .add(image_button(add_split_button, 32.0, 32.0, 1.0))
+                                            .clicked()
+                                        {
+                                            app.add_split_under = Some(i);
+                                        }
+                                    });
+                                    row.col(|ui| {
+                                        if ui
+                                            .add(image_button(remove_split_button, 32.0, 32.0, 1.0))
+                                            .clicked()
+                                        {
+                                            app.delete_split = Some(i);
+                                        }
+                                    });
                                 });
                             });
                             body.row(24., |mut row| {
@@ -436,8 +477,24 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     let pbs = c.splits.iter().map(|split| split.pb);
                                     ui.label(pbs.sum::<u16>().to_string());
                                 });
+                                row.col(|_ui| {});
+                                row.col(|_ui| {});
                             });
                         });
+
+                    if let Some(split) = app.delete_split {
+                        c.splits.remove(split);
+                        app.delete_split = None;
+                        c.save();
+                        app.num_splits_category = c.splits.len();
+                    }
+
+                    if let Some(split) = app.add_split_under {
+                        c.splits.insert(split + 1, Split::default());
+                        app.add_split_under = None;
+                        c.save();
+                        app.num_splits_category = c.splits.len();
+                    }
 
                     if let Some(dialog) = &mut app.open_file_dialog {
                         if dialog.show(ctx).selected() {

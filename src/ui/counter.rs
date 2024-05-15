@@ -46,8 +46,12 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                         - min(app_cl.config.num_splits_counter >> 1, app_cl.selected_split);
                     let last_split: usize =
                         min(first_split + app_cl.config.num_splits_counter, splits.len());
-                    let first_split =
-                        min(first_split, last_split - app_cl.config.num_splits_counter);
+                    let first_split = min(
+                        first_split,
+                        last_split
+                            .checked_sub(app_cl.config.num_splits_counter)
+                            .unwrap_or_default(),
+                    );
                     table
                         .header(app.config.font_size + 5.0, |mut header| {
                             header.col(|_| {});

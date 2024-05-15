@@ -12,3 +12,7 @@ It currently is in it's very early stages so please expect some bugs and caveats
 - Windows: Should be compatible out of the box in any x64 Windows.
 - Linux: You will need to install `glibc 2.38` or later. There will be a flatpak version available at a later date.
   - Currently global hotkeys only work on X11. 
+
+## Acknowledgements and credits
+
+- All SVG files are provided by [SVGRepo](https://www.svgrepo.com/)
