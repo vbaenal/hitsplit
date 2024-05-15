@@ -390,6 +390,11 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                             app.open_file_dialog = Some(dialog);
                                             app.change_split_img.clone_from(&split.uuid);
                                         }
+                                        if split.icon_path.is_some()
+                                            && ui.button("Clear image").clicked()
+                                        {
+                                            split.clear_icon_path();
+                                        }
                                     });
                                     row.col(|ui| {
                                         ui.add(
@@ -454,6 +459,12 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     }
                     if ui.button("Open HitSplit counter").clicked() {
                         app.show_hit_counter = true;
+                    }
+                });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    if ui.button("Clear splits images").clicked() {
+                        c.clear_icon_path();
                     }
                 });
             } else {

@@ -19,4 +19,8 @@ impl Split {
             ..Default::default()
         }
     }
+
+    pub fn clear_icon_path(&mut self) {
+        self.icon_path = None;
+    }
 }

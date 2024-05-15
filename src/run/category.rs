@@ -39,6 +39,12 @@ impl Category {
     pub fn change_name(&mut self, new_name: &str) {
         new_name.clone_into(&mut self.name)
     }
+
+    pub fn clear_icon_path(&mut self) {
+        self.splits
+            .iter_mut()
+            .for_each(|split| split.clear_icon_path());
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
