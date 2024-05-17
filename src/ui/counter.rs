@@ -11,8 +11,9 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
         egui::ViewportBuilder::default()
             .with_title("HitSplit Counter")
             .with_resizable(true)
-            .with_inner_size([280.0, 600.0]),
+            .with_inner_size(app.config.counter_size),
         move |ctx, _class| {
+            app.config.counter_size = ctx.screen_rect().size();
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.label(app_cl.loaded_game.unwrap().name);

@@ -1,5 +1,6 @@
 use std::fs::read_dir;
 
+use egui::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::run::game::SmallGame;
@@ -14,6 +15,7 @@ pub struct OptionalConfig {
     font_size: Option<f32>,
     limit_splits_shown: Option<bool>,
     num_splits_counter: Option<usize>,
+    counter_size: Option<Vec2>,
 }
 
 impl OptionalConfig {
@@ -30,6 +32,7 @@ impl OptionalConfig {
             font_size: self.font_size.unwrap_or(14.0),
             limit_splits_shown: self.limit_splits_shown.unwrap_or(false),
             num_splits_counter: self.num_splits_counter.unwrap_or(10),
+            counter_size: self.counter_size.unwrap_or([280.0, 600.0].into()),
         }
     }
 }
@@ -44,6 +47,7 @@ pub struct Config {
     pub font_size: f32,
     pub limit_splits_shown: bool,
     pub num_splits_counter: usize,
+    pub counter_size: Vec2,
 }
 
 impl Default for Config {
@@ -57,6 +61,7 @@ impl Default for Config {
             font_size: 14.0,
             limit_splits_shown: false,
             num_splits_counter: 0,
+            counter_size: [280.0, 600.0].into(),
         }
     }
 }
