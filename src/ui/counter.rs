@@ -16,11 +16,11 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
             app.config.counter_size = ctx.screen_rect().size();
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
-                    ui.label(app_cl.loaded_game.unwrap().name);
+                    ui.label(app_cl.loaded_game.unwrap_or_default().name);
                 });
                 if app_cl.loaded_category.is_some() {
                     ui.vertical_centered(|ui| {
-                        ui.label(app_cl.loaded_category.as_ref().unwrap().name.clone());
+                        ui.label(app_cl.loaded_category.clone().unwrap_or_default().name);
                     });
                 }
 
@@ -42,7 +42,11 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                     if !app_cl.config.dark_mode {
                         color = Color32::from_rgb(8, 8, 8)
                     }
-                    let splits = &app_cl.loaded_category.as_ref().unwrap().splits;
+                    let binding = Vec::new();
+                    let splits = match &app_cl.loaded_category {
+                        Some(category) => &category.splits,
+                        None => &binding,
+                    };
                     let first_split: usize = app_cl.selected_split
                         - min(app_cl.config.num_splits_counter >> 1, app_cl.selected_split);
                     let last_split: usize =
@@ -126,31 +130,40 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                     ui.colored_label(color, "Total: ");
                                 });
                                 row.col(|ui| {
-                                    let hits = app_cl
-                                        .loaded_category
-                                        .as_ref()
-                                        .unwrap()
-                                        .splits
-                                        .iter()
-                                        .map(|split| split.hits);
-                                    ui.colored_label(color, hits.sum::<u16>().to_string());
+                                    let hits = match &app_cl.loaded_category {
+                                        Some(category) => category
+                                            .splits
+                                            .iter()
+                                            .map(|split| split.hits)
+                                            .sum::<u16>(),
+                                        None => 0,
+                                    };
+
+                                    ui.colored_label(color, hits.to_string());
                                 });
                                 row.col(|ui| {
-                                    let diffs =
-                                        app_cl.loaded_category.as_ref().unwrap().splits.iter().map(
-                                            |split| i32::from(split.hits) - i32::from(split.pb),
-                                        );
-                                    ui.colored_label(color, diffs.sum::<i32>().to_string());
+                                    let diff = match &app_cl.loaded_category {
+                                        Some(category) => category
+                                            .splits
+                                            .iter()
+                                            .map(|split| {
+                                                i32::from(split.hits) - i32::from(split.pb)
+                                            })
+                                            .sum::<i32>(),
+                                        None => 0,
+                                    };
+                                    ui.colored_label(color, diff.to_string());
                                 });
                                 row.col(|ui| {
-                                    let pbs = app_cl
-                                        .loaded_category
-                                        .as_ref()
-                                        .unwrap()
-                                        .splits
-                                        .iter()
-                                        .map(|split| split.pb);
-                                    ui.colored_label(color, pbs.sum::<u16>().to_string());
+                                    let pb = match &app_cl.loaded_category {
+                                        Some(category) => category
+                                            .splits
+                                            .iter()
+                                            .map(|split| split.pb)
+                                            .sum::<u16>(),
+                                        None => 0,
+                                    };
+                                    ui.colored_label(color, pb.to_string());
                                 });
                             });
                         });

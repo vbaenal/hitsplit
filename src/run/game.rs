@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::category::SmallCategory;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Game {
     pub uuid: String,
     pub name: String,

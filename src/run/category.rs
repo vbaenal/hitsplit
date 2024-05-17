@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::split::Split;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Category {
     pub uuid: String,
     pub name: String,
