@@ -24,7 +24,7 @@ impl OptionalConfig {
             dark_mode: self.dark_mode.unwrap_or(true),
             next_split_as_reset: self.next_split_as_reset.unwrap_or(true),
             autosave: self.autosave.unwrap_or(true),
-            autosave_interval: self.autosave_interval.unwrap_or(5),
+            autosave_interval: self.autosave_interval.unwrap_or(60),
             game_list: match &self.game_list {
                 None => Vec::new(),
                 Some(v) => v.to_vec(),
@@ -56,7 +56,7 @@ impl Default for Config {
             dark_mode: true,
             next_split_as_reset: true,
             autosave: true,
-            autosave_interval: 5,
+            autosave_interval: 60,
             game_list: Vec::new(),
             font_size: 14.0,
             limit_splits_shown: false,

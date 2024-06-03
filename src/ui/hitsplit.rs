@@ -10,7 +10,7 @@ use crate::{
     },
 };
 use eframe::{egui::Visuals, Storage};
-use egui::TextStyle;
+use egui::Vec2;
 use egui_file::FileDialog;
 use global_hotkey::{hotkey::Code, GlobalHotKeyManager};
 use std::{path::PathBuf, time::Duration};
@@ -33,7 +33,7 @@ pub struct HitSplit {
     pub loaded_game: Option<Game>,
     pub loaded_category: Option<Category>,
     pub selected_split: usize,
-    pub show_hit_counter: bool,
+    pub show_config: bool,
     pub hotkey_manager: Option<GlobalHotKeyManager>,
     pub capturing: Option<ShortcutAction>,
     pub opened_file: Option<PathBuf>,
@@ -61,7 +61,7 @@ impl Clone for HitSplit {
             loaded_game: self.loaded_game.clone(),
             loaded_category: self.loaded_category.clone(),
             selected_split: self.selected_split,
-            show_hit_counter: self.show_hit_counter,
+            show_config: self.show_config,
             hotkey_manager: None,
             capturing: self.capturing,
             opened_file: self.opened_file.clone(),
@@ -91,7 +91,7 @@ impl Default for HitSplit {
             loaded_game: None,
             loaded_category: None,
             selected_split: 0,
-            show_hit_counter: Default::default(),
+            show_config: true,
             hotkey_manager: None,
             capturing: None,
             opened_file: None,
@@ -158,8 +158,7 @@ impl eframe::App for HitSplit {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mut style = (*ctx.style()).clone();
-        self.config.dark_mode = style.visuals.dark_mode;
+        self.config.dark_mode = ctx.style().visuals.dark_mode;
         if let Some(sa) = &self.clone().capturing {
             if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
                 ShortcutAction::change_shortcut(self, sa, key);
@@ -168,22 +167,32 @@ impl eframe::App for HitSplit {
             }
         }
 
-        shortcut_handler(self);
-        left_panel(self, ctx);
+        counter(self, ctx);
 
-        match self.open_page {
-            Pages::List => list(self, ctx),
-            Pages::Settings => configuration(self, ctx),
+        if self.show_config {
+            ctx.show_viewport_immediate(
+                egui::ViewportId::from_hash_of("hitsplit_manager"),
+                egui::ViewportBuilder::default()
+                    .with_title("HitSplit Manager")
+                    .with_resizable(true)
+                    .with_inner_size(Vec2::new(600.0, 600.0))
+                    .with_min_inner_size(Vec2::new(600.0, 600.0)),
+                move |ctx, _class| {
+                    shortcut_handler(self);
+                    left_panel(self, ctx);
+
+                    match self.open_page {
+                        Pages::List => list(self, ctx),
+                        Pages::Settings => configuration(self, ctx),
+                    }
+                    if ctx.input(|i| i.raw.viewport().close_requested()) {
+                        self.show_config = false;
+                    }
+                },
+            );
         }
 
-        if self.show_hit_counter {
-            let prev_style = style.clone();
-            style.text_styles.get_mut(&TextStyle::Body).unwrap().size = self.config.font_size;
-            ctx.set_style(style);
-            counter(self, ctx);
-            ctx.set_style(prev_style);
-            ctx.request_repaint();
-        }
+        ctx.request_repaint();
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {

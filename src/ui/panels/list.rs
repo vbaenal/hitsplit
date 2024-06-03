@@ -514,9 +514,6 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     if ui.button("Save splits").clicked() {
                         c.save();
                     }
-                    if ui.button("Open HitSplit counter").clicked() {
-                        app.show_hit_counter = true;
-                    }
                 });
                 ui.separator();
                 ui.horizontal(|ui| {
