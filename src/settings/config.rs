@@ -3,7 +3,7 @@ use std::fs::read_dir;
 use egui::Vec2;
 use serde::{Deserialize, Serialize};
 
-use crate::run::game::SmallGame;
+use crate::{get_config_path, run::game::SmallGame};
 
 #[derive(Deserialize)]
 pub struct OptionalConfig {
@@ -68,32 +68,37 @@ impl Default for Config {
 
 impl Config {
     pub fn save(&mut self) {
+        let config_path = get_config_path();
         let config_str = serde_json::to_string(self).unwrap();
-        let _ = std::fs::write("config/config.json", config_str);
+        let _ = std::fs::write(format!("{config_path}/config.json"), config_str);
     }
 
     pub fn load() -> Self {
-        if read_dir("config").is_err() {
-            let _ = std::fs::create_dir("config");
+        let config_path = get_config_path();
+
+        if read_dir(&config_path).is_err() {
+            let _ = std::fs::create_dir(&config_path);
         }
 
-        if read_dir("config/games").is_err() {
-            let _ = std::fs::create_dir("config/games");
+        if read_dir(format!("{config_path}/games")).is_err() {
+            let _ = std::fs::create_dir(format!("{config_path}/games"));
         }
 
-        if read_dir("config/categories").is_err() {
-            let _ = std::fs::create_dir("config/categories");
+        if read_dir(format!("{config_path}/categories")).is_err() {
+            let _ = std::fs::create_dir(format!("{config_path}/categories"));
         }
 
-        let config_json: String = match std::fs::read_to_string("config/config.json") {
-            Err(_) => {
-                let tmp: Config = Default::default();
-                let config_str = serde_json::to_string(&tmp).unwrap();
-                let _ = std::fs::write("config/config.json", config_str.clone());
-                config_str
-            }
-            Ok(f) => f,
-        };
+        let config_json: String =
+            match std::fs::read_to_string(format!("{config_path}/config.json")) {
+                Err(_) => {
+                    let tmp: Config = Default::default();
+                    let config_str = serde_json::to_string(&tmp).unwrap();
+                    let _ =
+                        std::fs::write(format!("{config_path}/config.json"), config_str.clone());
+                    config_str
+                }
+                Ok(f) => f,
+            };
 
         serde_json::from_str::<OptionalConfig>(config_json.as_str())
             .unwrap()

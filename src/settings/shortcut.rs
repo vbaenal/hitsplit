@@ -8,6 +8,7 @@ use global_hotkey::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    get_config_path,
     run::manager::{add_hit, next_split, prev_split, reset, set_pb, sub_hit},
     HitSplit,
 };
@@ -85,24 +86,31 @@ impl Default for Shortcut {
 
 impl Shortcut {
     pub fn save(&self) {
+        let config_path = get_config_path();
         let shortcuts_str = serde_json::to_string(self).unwrap();
-        std::fs::write("config/shortcuts.json", shortcuts_str).unwrap();
+        std::fs::write(format!("{config_path}/shortcuts.json"), shortcuts_str).unwrap();
     }
 
     pub fn load() -> Self {
-        if read_dir("config").is_err() {
-            std::fs::create_dir("config").unwrap();
+        let config_path = get_config_path();
+        if read_dir(&config_path).is_err() {
+            let _ = std::fs::create_dir(&config_path);
         }
 
-        let shortcuts_json: String = match std::fs::read_to_string("config/shortcuts.json") {
-            Err(_) => {
-                let tmp: Shortcut = Default::default();
-                let shortcuts_str = serde_json::to_string(&tmp).unwrap();
-                std::fs::write("config/shortcuts.json", shortcuts_str.clone()).unwrap();
-                shortcuts_str
-            }
-            Ok(f) => f,
-        };
+        let shortcuts_json: String =
+            match std::fs::read_to_string(format!("{config_path}/shortcuts.json")) {
+                Err(_) => {
+                    let tmp: Shortcut = Default::default();
+                    let shortcuts_str = serde_json::to_string(&tmp).unwrap();
+                    std::fs::write(
+                        format!("{config_path}/shortcuts.json"),
+                        shortcuts_str.clone(),
+                    )
+                    .unwrap();
+                    shortcuts_str
+                }
+                Ok(f) => f,
+            };
 
         serde_json::from_str::<Shortcut>(shortcuts_json.as_str()).unwrap()
     }

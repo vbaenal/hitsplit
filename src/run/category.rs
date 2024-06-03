@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::get_config_path;
+
 use super::split::Split;
 
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -19,8 +21,9 @@ impl Category {
     }
 
     pub fn load(uuid: String) -> Self {
+        let config_path = get_config_path();
         let game_json: String =
-            match std::fs::read_to_string(format!("config/categories/{uuid}.json")) {
+            match std::fs::read_to_string(format!("{config_path}/categories/{uuid}.json")) {
                 Err(_) => "".to_string(),
                 Ok(f) => f,
             };
@@ -29,9 +32,10 @@ impl Category {
     }
 
     pub fn save(&self) {
+        let config_path = get_config_path();
         let category_str = serde_json::to_string(&self).unwrap();
         let _ = std::fs::write(
-            format!("config/categories/{}.json", self.uuid),
+            format!("{config_path}/categories/{}.json", self.uuid),
             category_str,
         );
     }
