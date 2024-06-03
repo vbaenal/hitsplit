@@ -167,6 +167,8 @@ impl eframe::App for HitSplit {
             }
         }
 
+        shortcut_handler(self);
+
         counter(self, ctx);
 
         if self.show_config {
@@ -178,7 +180,6 @@ impl eframe::App for HitSplit {
                     .with_inner_size(Vec2::new(600.0, 600.0))
                     .with_min_inner_size(Vec2::new(600.0, 600.0)),
                 move |ctx, _class| {
-                    shortcut_handler(self);
                     left_panel(self, ctx);
 
                     match self.open_page {
