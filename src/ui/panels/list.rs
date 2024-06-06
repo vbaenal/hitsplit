@@ -10,6 +10,7 @@ use crate::{
         game::{Game, SmallGame},
         split::Split,
     },
+    settings::columns::{Column, ColumnVec},
     ui::functions::{image_button, numeric_edit_field_u16, numeric_edit_field_usize},
     HitSplit,
 };
@@ -189,6 +190,19 @@ fn modify_category(app: &mut HitSplit, ctx: &Context) {
         });
 }
 
+fn column_check(ui: &mut egui::Ui, columns: &mut ColumnVec, column: &Column) {
+    let has_column = columns.contains(column);
+    let mut has_column_mut = has_column;
+    ui.checkbox(&mut has_column_mut, "");
+    if has_column != has_column_mut {
+        if has_column_mut {
+            columns.push(column);
+        } else {
+            columns.remove(column);
+        }
+    }
+}
+
 pub fn list(app: &mut HitSplit, ctx: &Context) {
     add_game(app, ctx);
     modify_game(app, ctx);
@@ -335,18 +349,23 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .header(20.0, |mut header| {
                             header.col(|ui| {
                                 ui.strong("Image");
+                                column_check(ui, &mut app.config.columns, &Column::Icon);
                             });
                             header.col(|ui| {
                                 ui.strong("Name");
+                                column_check(ui, &mut app.config.columns, &Column::SplitName);
                             });
                             header.col(|ui| {
                                 ui.strong("Hits");
+                                column_check(ui, &mut app.config.columns, &Column::Hits);
                             });
                             header.col(|ui| {
                                 ui.strong("Diff");
+                                column_check(ui, &mut app.config.columns, &Column::Difference);
                             });
                             header.col(|ui| {
                                 ui.strong("PB");
+                                column_check(ui, &mut app.config.columns, &Column::PersonalBest);
                             });
                             header.col(|ui| {
                                 ui.strong("");
@@ -422,36 +441,13 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     row.col(|ui| {
                                         numeric_edit_field_u16(ui, &mut split.pb);
                                     });
-
-                                    let add_split_button;
-                                    let remove_split_button;
-                                    if app.config.dark_mode {
-                                        add_split_button =
-                                            egui::include_image!("../../assets/dark_mode/add.png");
-                                        remove_split_button = egui::include_image!(
-                                            "../../assets/dark_mode/remove.png"
-                                        );
-                                    } else {
-                                        add_split_button =
-                                            egui::include_image!("../../assets/light_mode/add.png");
-                                        remove_split_button = egui::include_image!(
-                                            "../../assets/light_mode/remove.png"
-                                        );
-                                    }
-
                                     row.col(|ui| {
-                                        if ui
-                                            .add(image_button(add_split_button, 32.0, 32.0, 1.0))
-                                            .clicked()
-                                        {
+                                        if ui.button("➕").clicked() {
                                             app.add_split_under = Some(i);
                                         }
                                     });
                                     row.col(|ui| {
-                                        if ui
-                                            .add(image_button(remove_split_button, 32.0, 32.0, 1.0))
-                                            .clicked()
-                                        {
+                                        if ui.button("➖").clicked() {
                                             app.delete_split = Some(i);
                                         }
                                     });

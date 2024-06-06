@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{get_config_path, run::game::SmallGame};
 
+use super::columns::ColumnVec;
+
 #[derive(Deserialize)]
 pub struct OptionalConfig {
     dark_mode: Option<bool>,
@@ -16,6 +18,7 @@ pub struct OptionalConfig {
     limit_splits_shown: Option<bool>,
     num_splits_counter: Option<usize>,
     counter_size: Option<Vec2>,
+    columns: Option<ColumnVec>,
 }
 
 impl OptionalConfig {
@@ -33,6 +36,7 @@ impl OptionalConfig {
             limit_splits_shown: self.limit_splits_shown.unwrap_or(false),
             num_splits_counter: self.num_splits_counter.unwrap_or(10),
             counter_size: self.counter_size.unwrap_or([280.0, 600.0].into()),
+            columns: self.columns.clone().unwrap_or_default(),
         }
     }
 }
@@ -48,6 +52,7 @@ pub struct Config {
     pub limit_splits_shown: bool,
     pub num_splits_counter: usize,
     pub counter_size: Vec2,
+    pub columns: ColumnVec,
 }
 
 impl Default for Config {
@@ -62,6 +67,7 @@ impl Default for Config {
             limit_splits_shown: false,
             num_splits_counter: 0,
             counter_size: [280.0, 600.0].into(),
+            columns: ColumnVec::default(),
         }
     }
 }

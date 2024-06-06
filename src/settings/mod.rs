@@ -1,6 +1,7 @@
 use egui::Key;
 use global_hotkey::hotkey::Code;
 
+pub mod columns;
 pub mod config;
 pub mod shortcut;
 

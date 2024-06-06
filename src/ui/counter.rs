@@ -4,6 +4,7 @@ use egui::{Color32, Context, Sense};
 
 use crate::{
     run::{category::Category, game::Game},
+    settings::columns::Column,
     HitSplit,
 };
 
@@ -31,19 +32,25 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
             }
 
             ui.vertical(|ui| {
-                let table = egui_extras::TableBuilder::new(ui)
+                let available_height = ui.available_height();
+                let mut table = egui_extras::TableBuilder::new(ui)
                     .striped(false)
                     .cell_layout(egui::Layout::centered_and_justified(
                         egui::Direction::LeftToRight,
                     ))
                     .resizable(true)
                     .striped(false)
-                    .column(egui_extras::Column::exact(app.config.font_size))
-                    .column(egui_extras::Column::auto())
-                    .column(egui_extras::Column::auto())
-                    .column(egui_extras::Column::auto())
-                    .column(egui_extras::Column::auto())
-                    .min_scrolled_height(200.0);
+                    .min_scrolled_height(200.0)
+                    .max_scroll_height(available_height);
+
+                for column in app.config.columns.iter() {
+                    table = table.column(if *column == Column::Icon {
+                        egui_extras::Column::exact(app.config.font_size)
+                    } else {
+                        egui_extras::Column::auto()
+                    })
+                }
+
                 let mut color = Color32::from_rgb(250, 250, 250);
                 if !app.config.dark_mode {
                     color = Color32::from_rgb(8, 8, 8)
@@ -65,19 +72,9 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                 );
                 table
                     .header(app.config.font_size + 5.0, |mut header| {
-                        header.col(|_| {});
-                        header.col(|ui| {
-                            ui.strong("Name");
-                        });
-                        header.col(|ui| {
-                            ui.strong("Hits");
-                        });
-                        header.col(|ui| {
-                            ui.strong("Diff");
-                        });
-                        header.col(|ui| {
-                            ui.strong("PB");
-                        });
+                        for column in app.config.columns.iter() {
+                            column.header(app, &mut header);
+                        }
                     })
                     .body(|mut body| {
                         splits
@@ -99,72 +96,15 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                     }
                                 }
                                 body.row(app.config.font_size + 5.0, |mut row| {
-                                    let mut name = split.name.clone();
-                                    if i == app.selected_split {
-                                        name = format!("> {}", name);
+                                    for column in app.config.columns.iter() {
+                                        column.body(app, i, split, label_color, &mut row);
                                     }
-                                    row.col(|ui| {
-                                        if let Some(p) = &split.icon_path {
-                                            let path = p.as_path().to_str().unwrap();
-                                            ui.add(
-                                                egui::Image::new(format!("file://{path}"))
-                                                    .max_height(app.config.font_size),
-                                            );
-                                        }
-                                    });
-                                    row.col(|ui| {
-                                        ui.colored_label(label_color, name);
-                                    });
-                                    row.col(|ui| {
-                                        ui.colored_label(label_color, split.hits.to_string());
-                                    });
-                                    row.col(|ui| {
-                                        ui.colored_label(
-                                            label_color,
-                                            (i32::from(split.hits) - i32::from(split.pb))
-                                                .to_string(),
-                                        );
-                                    });
-                                    row.col(|ui| {
-                                        ui.colored_label(label_color, split.pb.to_string());
-                                    });
                                 });
                             });
                         body.row(app.config.font_size + 5.0, |mut row| {
-                            row.col(|_| {});
-                            row.col(|ui| {
-                                ui.colored_label(color, "Total: ");
-                            });
-                            row.col(|ui| {
-                                let hits = match &app.loaded_category {
-                                    Some(category) => {
-                                        category.splits.iter().map(|split| split.hits).sum::<u16>()
-                                    }
-                                    None => 0,
-                                };
-
-                                ui.colored_label(color, hits.to_string());
-                            });
-                            row.col(|ui| {
-                                let diff = match &app.loaded_category {
-                                    Some(category) => category
-                                        .splits
-                                        .iter()
-                                        .map(|split| i32::from(split.hits) - i32::from(split.pb))
-                                        .sum::<i32>(),
-                                    None => 0,
-                                };
-                                ui.colored_label(color, diff.to_string());
-                            });
-                            row.col(|ui| {
-                                let pb = match &app.loaded_category {
-                                    Some(category) => {
-                                        category.splits.iter().map(|split| split.pb).sum::<u16>()
-                                    }
-                                    None => 0,
-                                };
-                                ui.colored_label(color, pb.to_string());
-                            });
+                            for column in app.config.columns.iter() {
+                                column.total(app, color, &mut row);
+                            }
                         });
                     });
             });

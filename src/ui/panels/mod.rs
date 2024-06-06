@@ -2,7 +2,7 @@ use egui::Context;
 
 use crate::HitSplit;
 
-use super::functions::image_button;
+use super::{functions::image_button, VERSION};
 
 pub mod list;
 pub mod settings;
@@ -43,5 +43,11 @@ pub fn left_panel(app: &mut HitSplit, ctx: &Context) {
             {
                 app.open_page = Pages::Settings;
             }
+            egui::TopBottomPanel::bottom("bottom_panel")
+                .exact_height(20.)
+                .resizable(false)
+                .show_inside(ui, |ui| {
+                    ui.colored_label(egui::Color32::from_rgb(240, 107, 12), VERSION);
+                });
         });
 }
