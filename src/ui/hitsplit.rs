@@ -159,15 +159,10 @@ impl eframe::App for HitSplit {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.config.dark_mode = ctx.style().visuals.dark_mode;
-        if let Some(sa) = &self.clone().capturing {
-            if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
-                ShortcutAction::change_shortcut(self, sa, key);
-                self.manage_hotkeys();
-                self.capturing = None;
-            }
-        }
 
-        shortcut_handler(self);
+        if self.capturing.is_none() {
+            shortcut_handler(self);
+        }
 
         counter(self, ctx);
 
@@ -180,6 +175,14 @@ impl eframe::App for HitSplit {
                     .with_inner_size(Vec2::new(600.0, 600.0))
                     .with_min_inner_size(Vec2::new(600.0, 600.0)),
                 move |ctx, _class| {
+                    if let Some(sa) = &self.capturing.clone() {
+                        if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
+                            ShortcutAction::change_shortcut(self, sa, key);
+                            self.manage_hotkeys();
+                            self.capturing = None;
+                        }
+                    }
+
                     left_panel(self, ctx);
 
                     match self.open_page {
