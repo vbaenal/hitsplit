@@ -1,6 +1,6 @@
 [package]
 name = "hitsplit"
-version = "0.4.0"
+version = "0.4.1"
 description = "HitSplit is a multiplatform tool for keeping track of your no-hit runs."
 authors = ["Víctor Baena <vicbaeluq@gmail.com>"]
 build = "build.rs"
