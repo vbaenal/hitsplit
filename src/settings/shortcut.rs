@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     get_config_path,
-    run::manager::{add_hit, next_split, prev_split, reset, set_pb, sub_hit},
+    run::manager::{
+        add_hit, next_split, pause_chrono, prev_split, reset, set_pb, start_chrono, sub_hit,
+    },
     HitSplit,
 };
 
@@ -23,6 +25,8 @@ pub enum ShortcutAction {
     SubHit,
     Reset,
     SetPb,
+    StartChrono,
+    PauseChrono,
 }
 
 impl ShortcutAction {
@@ -34,6 +38,8 @@ impl ShortcutAction {
             3 => Some(ShortcutAction::SubHit),
             4 => Some(ShortcutAction::Reset),
             5 => Some(ShortcutAction::SetPb),
+            6 => Some(ShortcutAction::StartChrono),
+            7 => Some(ShortcutAction::PauseChrono),
             _ => None,
         }
     }
@@ -46,6 +52,8 @@ impl ShortcutAction {
             ShortcutAction::SubHit => 3,
             ShortcutAction::Reset => 4,
             ShortcutAction::SetPb => 5,
+            ShortcutAction::StartChrono => 6,
+            ShortcutAction::PauseChrono => 7,
         }
     }
 
@@ -57,29 +65,37 @@ impl ShortcutAction {
             ShortcutAction::SubHit => sub_hit,
             ShortcutAction::Reset => reset,
             ShortcutAction::SetPb => set_pb,
+            ShortcutAction::StartChrono => start_chrono,
+            ShortcutAction::PauseChrono => pause_chrono,
         }
     }
 
-    pub fn change_shortcut(app: &mut HitSplit, action: &ShortcutAction, key: Key) {
-        let shortcut: &mut [Code; 6] = &mut app.shortcut.as_mut().unwrap().0;
-        if !shortcut.contains(&key_to_code(&key)) {
-            shortcut[action.to_usize()] = key_to_code(&key);
+    pub fn change_shortcut(app: &mut HitSplit, action: &ShortcutAction, key: &Key) {
+        //let shortcut = &mut app.shortcut.as_mut().unwrap().0;
+        if let Some(shortcut) = app.shortcut.as_mut() {
+            if !shortcut.0.contains(&key_to_code(key)) {
+                if let Some(sc) = shortcut.0.get_mut(action.to_usize()) {
+                    *sc = key_to_code(key);
+                }
+            }
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Shortcut(pub [Code; 6]);
+pub struct Shortcut(pub Vec<Code>);
 
 impl Default for Shortcut {
     fn default() -> Self {
-        Shortcut([
+        Shortcut(vec![
             Code::Numpad8,
             Code::Numpad2,
             Code::Numpad7,
             Code::Numpad9,
             Code::Numpad5,
             Code::Numpad3,
+            Code::Numpad4,
+            Code::Numpad6,
         ])
     }
 }
@@ -112,7 +128,11 @@ impl Shortcut {
                 Ok(f) => f,
             };
 
-        serde_json::from_str::<Shortcut>(shortcuts_json.as_str()).unwrap()
+        let shortcuts = serde_json::from_str::<Shortcut>(shortcuts_json.as_str()).unwrap();
+        if shortcuts.0.len() < 8 {
+            return Shortcut::default();
+        }
+        shortcuts
     }
 
     pub fn code_to_hotkey(code: Code) -> HotKey {
@@ -128,7 +148,7 @@ pub fn shortcut_handler(app: &mut HitSplit) {
     let receiver = GlobalHotKeyEvent::receiver();
     if let Ok(event) = receiver.try_recv() {
         if event.state == HotKeyState::Pressed {
-            let shortcut: [Code; 6] = app.shortcut.as_ref().unwrap().0;
+            let shortcut = &app.shortcut.as_ref().unwrap().0;
             let index = shortcut
                 .iter()
                 .enumerate()

@@ -60,6 +60,7 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                     Some(category) => &category.splits,
                     None => &binding,
                 };
+
                 let first_split: usize = app.selected_split
                     - min(app.config.num_splits_counter >> 1, app.selected_split);
                 let last_split: usize =
@@ -97,7 +98,14 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                                 }
                                 body.row(app.config.font_size + 5.0, |mut row| {
                                     for column in app.config.columns.iter() {
-                                        column.body(app, i, split, label_color, &mut row);
+                                        column.body(
+                                            app,
+                                            i,
+                                            split,
+                                            label_color,
+                                            &app.config.chrono_format,
+                                            &mut row,
+                                        );
                                     }
                                 });
                             });

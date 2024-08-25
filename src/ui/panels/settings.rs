@@ -1,6 +1,7 @@
 use egui::Slider;
 
 use crate::{
+    run::chrono::ChronometerFormat,
     settings::shortcut::ShortcutAction,
     ui::functions::{numeric_edit_field_u64, shortcut_button},
     HitSplit,
@@ -42,6 +43,45 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
                 ui.add(Slider::new(&mut app.config.num_splits_counter, 1..=25));
             });
         }
+        ui.horizontal(|ui| {
+            ui.label("Chronometer format");
+            let chrono_format = &app.config.chrono_format.clone();
+            let fun = |ui: &mut egui::Ui| {
+                ui.selectable_value(
+                    &mut app.config.chrono_format,
+                    ChronometerFormat::HHMM,
+                    "H:MM",
+                );
+                ui.selectable_value(
+                    &mut app.config.chrono_format,
+                    ChronometerFormat::HHMMSS,
+                    "H:MM:SS",
+                );
+                ui.selectable_value(
+                    &mut app.config.chrono_format,
+                    ChronometerFormat::HHMMSSX,
+                    "H:MM:SS.cs",
+                );
+                ui.selectable_value(
+                    &mut app.config.chrono_format,
+                    ChronometerFormat::MMSS,
+                    "MM:SS",
+                );
+                ui.selectable_value(
+                    &mut app.config.chrono_format,
+                    ChronometerFormat::MMSSX,
+                    "MM:SS.cs",
+                );
+            };
+            if egui::ComboBox::from_id_source("chrono_format")
+                .selected_text(chrono_format.text())
+                .show_ui(ui, fun)
+                .response
+                .changed()
+            {
+                app.chrono.set_format(chrono_format);
+            }
+        });
         ui.separator();
         ui.heading("Shortcuts");
         ui.horizontal(|ui| {
@@ -67,6 +107,14 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         ui.horizontal(|ui| {
             ui.label("Set current run as PB: ");
             shortcut_button(app, ui, &ShortcutAction::SetPb);
+        });
+        ui.horizontal(|ui| {
+            ui.label("Start chrono: ");
+            shortcut_button(app, ui, &ShortcutAction::StartChrono);
+        });
+        ui.horizontal(|ui| {
+            ui.label("Pause chrono: ");
+            shortcut_button(app, ui, &ShortcutAction::PauseChrono);
         });
 
         if ui.button("Save config").clicked() {

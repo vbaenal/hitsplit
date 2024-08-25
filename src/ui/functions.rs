@@ -18,14 +18,14 @@ pub fn shortcut_button(app: &mut HitSplit, ui: &mut egui::Ui, action: &ShortcutA
 
     let btn_label = if capturing {
         "Press a key to change shortcut. Click again to cancel.".to_string()
+    } else if let Some(shortcut) = app.shortcut.as_ref() {
+        if let Some(code) = shortcut.0.get(action.to_usize()) {
+            code.to_string()
+        } else {
+            "None".to_owned()
+        }
     } else {
-        app.shortcut
-            .as_ref()
-            .unwrap()
-            .0
-            .get(action.to_usize())
-            .unwrap()
-            .to_string()
+        "None".to_owned()
     };
     if ui.button(btn_label).clicked() {
         if capturing {

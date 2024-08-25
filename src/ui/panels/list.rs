@@ -341,6 +341,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::auto())
+                        .column(egui_extras::Column::auto())
                         .column(egui_extras::Column::initial(24.0))
                         .column(egui_extras::Column::initial(24.0))
                         .min_scrolled_height(0.0);
@@ -366,6 +368,14 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             header.col(|ui| {
                                 ui.strong("PB");
                                 column_check(ui, &mut app.config.columns, &Column::PersonalBest);
+                            });
+                            header.col(|ui| {
+                                ui.strong("Chrono");
+                                column_check(ui, &mut app.config.columns, &Column::Chrono);
+                            });
+                            header.col(|ui| {
+                                ui.strong("Chrono Ac.");
+                                column_check(ui, &mut app.config.columns, &Column::ChronoAcum);
                             });
                             header.col(|ui| {
                                 ui.strong("");
@@ -441,6 +451,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     row.col(|ui| {
                                         numeric_edit_field_u16(ui, &mut split.pb);
                                     });
+                                    row.col(|_ui| {});
+                                    row.col(|_ui| {});
                                     row.col(|ui| {
                                         if ui.button("➕").clicked() {
                                             app.add_split_under = Some(i);
@@ -473,6 +485,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                     let pbs = c.splits.iter().map(|split| split.pb);
                                     ui.label(pbs.sum::<u16>().to_string());
                                 });
+                                row.col(|_ui| {});
+                                row.col(|_ui| {});
                                 row.col(|_ui| {});
                                 row.col(|_ui| {});
                             });

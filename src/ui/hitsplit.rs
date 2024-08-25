@@ -3,7 +3,7 @@ use super::{
     panels::{left_panel, list::list, settings::configuration, Pages},
 };
 use crate::{
-    run::{category::Category, game::Game},
+    run::{category::Category, chrono::Chronometer, game::Game},
     settings::{
         config::Config,
         shortcut::{shortcut_handler, Shortcut, ShortcutAction},
@@ -39,6 +39,7 @@ pub struct HitSplit {
     pub opened_file: Option<PathBuf>,
     pub open_file_dialog: Option<FileDialog>,
     pub change_split_img: Option<String>,
+    pub chrono: Chronometer,
 }
 
 impl Clone for HitSplit {
@@ -67,6 +68,7 @@ impl Clone for HitSplit {
             opened_file: self.opened_file.clone(),
             open_file_dialog: None,
             change_split_img: None,
+            chrono: self.chrono,
         }
     }
 }
@@ -97,6 +99,7 @@ impl Default for HitSplit {
             opened_file: None,
             open_file_dialog: None,
             change_split_img: None,
+            chrono: Chronometer::new(crate::run::chrono::ChronometerFormat::HHMMSSX),
         }
     }
 }
@@ -128,6 +131,7 @@ impl HitSplit {
             shortcut: Some(Shortcut::load()),
             ..Default::default()
         };
+        app.chrono.set_format(&app.config.chrono_format);
         app.manage_hotkeys();
 
         cc.egui_ctx.set_visuals(if app.config.dark_mode {
@@ -164,6 +168,12 @@ impl eframe::App for HitSplit {
             shortcut_handler(self);
         }
 
+        if let Some(category) = self.loaded_category.as_mut() {
+            if let Some(split) = category.splits.get_mut(self.selected_split) {
+                split.real_time = self.chrono.get_time();
+            }
+        }
+
         counter(self, ctx);
 
         if self.show_config {
@@ -172,12 +182,12 @@ impl eframe::App for HitSplit {
                 egui::ViewportBuilder::default()
                     .with_title("HitSplit Manager")
                     .with_resizable(true)
-                    .with_inner_size(Vec2::new(600.0, 600.0))
-                    .with_min_inner_size(Vec2::new(600.0, 600.0)),
+                    .with_inner_size(Vec2::new(800.0, 800.0))
+                    .with_min_inner_size(Vec2::new(650.0, 600.0)),
                 move |ctx, _class| {
                     if let Some(sa) = &self.capturing.clone() {
-                        if let Some(key) = ctx.input(|i| i.clone().keys_down.into_iter().last()) {
-                            ShortcutAction::change_shortcut(self, sa, key);
+                        if let Some(key) = ctx.input(|i| i.keys_down.clone().into_iter().last()) {
+                            ShortcutAction::change_shortcut(self, sa, &key);
                             self.manage_hotkeys();
                             self.capturing = None;
                         }
@@ -196,7 +206,8 @@ impl eframe::App for HitSplit {
             );
         }
 
-        ctx.request_repaint();
+        // 60 fps
+        ctx.request_repaint_after(Duration::from_micros(16666));
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {

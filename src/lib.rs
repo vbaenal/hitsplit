@@ -16,5 +16,9 @@ pub fn get_config_path() -> String {
             .clone_into(&mut config_path);
     }
 
+    if cfg!(debug_assertions) {
+        config_path += "/debug";
+    }
+
     config_path
 }

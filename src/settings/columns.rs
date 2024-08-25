@@ -1,8 +1,16 @@
+use std::time::Duration;
+
 use egui::Color32;
 use egui_extras::TableRow;
 use serde::{Deserialize, Serialize};
 
-use crate::{run::split::Split, HitSplit};
+use crate::{
+    run::{
+        chrono::{duration_chrono_format, ChronometerFormat},
+        split::Split,
+    },
+    HitSplit,
+};
 
 #[derive(Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Column {
@@ -11,6 +19,8 @@ pub enum Column {
     Hits,
     Difference,
     PersonalBest,
+    Chrono,
+    ChronoAcum,
 }
 
 impl Column {
@@ -21,6 +31,8 @@ impl Column {
             Column::Hits => 2,
             Column::Difference => 3,
             Column::PersonalBest => 4,
+            Column::Chrono => 5,
+            Column::ChronoAcum => 6,
         }
     }
 
@@ -43,6 +55,12 @@ impl Column {
             Column::PersonalBest => tr.col(|ui| {
                 ui.strong("PB");
             }),
+            Column::Chrono => tr.col(|ui| {
+                ui.strong("Chrono");
+            }),
+            Column::ChronoAcum => tr.col(|ui| {
+                ui.strong("Chrono Ac.");
+            }),
         };
     }
 
@@ -52,6 +70,7 @@ impl Column {
         index: usize,
         split: &Split,
         label_color: Color32,
+        chrono_format: &ChronometerFormat,
         row: &mut TableRow,
     ) {
         match self {
@@ -94,6 +113,30 @@ impl Column {
                     ui.colored_label(label_color, split.pb.to_string());
                 });
             }
+            Column::Chrono => {
+                row.col(|ui| {
+                    ui.colored_label(
+                        label_color,
+                        duration_chrono_format(split.real_time, chrono_format),
+                    );
+                });
+            }
+            Column::ChronoAcum => {
+                row.col(|ui| {
+                    if let Some(category) = &app.loaded_category {
+                        let acum: Duration = category
+                            .splits
+                            .iter()
+                            .take_while(|s| s.uuid != split.uuid)
+                            .map(|s| s.real_time)
+                            .sum();
+                        ui.colored_label(
+                            label_color,
+                            duration_chrono_format(acum + split.real_time, chrono_format),
+                        );
+                    }
+                });
+            }
         }
     }
 
@@ -128,6 +171,20 @@ impl Column {
                     None => 0,
                 };
                 ui.colored_label(label_color, pb.to_string());
+            }),
+            Column::Chrono => row.col(|ui| {
+                if let Some(category) = &app.loaded_category {
+                    let acum: Duration = category.splits.iter().map(|s| s.real_time).sum();
+                    let time: String = duration_chrono_format(acum, &app.config.chrono_format);
+                    ui.colored_label(label_color, time);
+                }
+            }),
+            Column::ChronoAcum => row.col(|ui| {
+                if let Some(category) = &app.loaded_category {
+                    let acum: Duration = category.splits.iter().map(|s| s.real_time).sum();
+                    let time: String = duration_chrono_format(acum, &app.config.chrono_format);
+                    ui.colored_label(label_color, time);
+                }
             }),
         };
     }
@@ -173,6 +230,8 @@ impl Default for ColumnVec {
             Column::Hits,
             Column::Difference,
             Column::PersonalBest,
+            Column::Chrono,
+            Column::ChronoAcum,
         ])
     }
 }
