@@ -229,7 +229,6 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     .to_string(),
                 )
                 .show_ui(ui, |ui| {
-                    ui.style_mut().wrap = Some(false);
                     ui.set_min_width(60.0);
                     app.config.game_list.iter().for_each(|game| {
                         if ui
@@ -271,7 +270,6 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                         .to_string(),
                     )
                     .show_ui(ui, |ui| {
-                        ui.style_mut().wrap = Some(false);
                         ui.set_min_width(60.0);
                         g.categories.iter().for_each(|category| {
                             if ui

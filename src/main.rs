@@ -22,6 +22,6 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "HitSplit",
         native_options,
-        Box::new(|cc| Box::new(hitsplit::HitSplit::new(cc))),
+        Box::new(|cc| Ok(Box::new(hitsplit::HitSplit::new(cc)))),
     )
 }

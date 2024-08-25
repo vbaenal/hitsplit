@@ -110,5 +110,6 @@ pub fn key_to_code(key: &Key) -> Code {
         Key::F33 => Code::F33,
         Key::F34 => Code::F34,
         Key::F35 => Code::F35,
+        Key::Quote => Code::Quote,
     }
 }

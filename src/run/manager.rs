@@ -12,7 +12,7 @@ pub fn prev_split(app: &mut HitSplit) {
             .splits
             .get(app.selected_split);
         app.chrono
-            .load_chrono(split.unwrap().real_time, app.config.chrono_format);
+            .load_chrono(split.unwrap().real_time, &app.config.chrono_format);
     }
 }
 
