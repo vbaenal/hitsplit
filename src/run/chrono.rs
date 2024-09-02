@@ -53,14 +53,14 @@ impl Chronometer {
     }
 
     pub fn set_format(&mut self, format: &ChronometerFormat) {
-        self.format = format.clone();
+        self.format = *format;
     }
 
     pub fn load_chrono(&mut self, elapsed: Duration, format: &ChronometerFormat) {
         self.start_time = None;
         self.elapsed = Some(elapsed);
         self.state = ChronometerState::Paused;
-        self.format = format.clone();
+        self.format = *format;
     }
 
     pub fn clear_elapsed(&mut self) {

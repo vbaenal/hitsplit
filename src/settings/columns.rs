@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{cmp::min, time::Duration};
 
 use egui::Color32;
 use egui_extras::TableRow;
@@ -37,29 +37,34 @@ impl Column {
     }
 
     pub fn header(&self, app: &HitSplit, tr: &mut TableRow) {
+        let tc = app.config.text_color_default;
+        let color = Color32::from_rgb(tc[0], tc[1], tc[2]);
         match self {
             Column::Icon => tr.col(|_ui| {}),
             Column::SplitName => tr.col(|ui| {
-                ui.strong(format!(
-                    "Split ({}/{})",
-                    app.selected_split + 1,
-                    app.num_splits_category
-                ));
+                ui.colored_label(
+                    color,
+                    format!(
+                        "Split ({}/{})",
+                        min(app.selected_split + 1, app.num_splits_category),
+                        app.num_splits_category
+                    ),
+                );
             }),
             Column::Hits => tr.col(|ui| {
-                ui.strong("Hits");
+                ui.colored_label(color, "Hits");
             }),
             Column::Difference => tr.col(|ui| {
-                ui.strong("Diff");
+                ui.colored_label(color, "Diff");
             }),
             Column::PersonalBest => tr.col(|ui| {
-                ui.strong("PB");
+                ui.colored_label(color, "PB");
             }),
             Column::Chrono => tr.col(|ui| {
-                ui.strong("Chrono");
+                ui.colored_label(color, "Chrono");
             }),
             Column::ChronoAcum => tr.col(|ui| {
-                ui.strong("Chrono Ac.");
+                ui.colored_label(color, "Chrono Ac.");
             }),
         };
     }

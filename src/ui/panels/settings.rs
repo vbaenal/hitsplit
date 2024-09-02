@@ -1,8 +1,8 @@
-use egui::Slider;
+use egui::{color_picker::color_edit_button_srgb, Slider};
 
 use crate::{
     run::chrono::ChronometerFormat,
-    settings::shortcut::ShortcutAction,
+    settings::{config::Config, shortcut::ShortcutAction},
     ui::functions::{numeric_edit_field_u64, shortcut_button},
     HitSplit,
 };
@@ -32,6 +32,17 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         ui.horizontal(|ui| {
             ui.label("Text font size: ");
             ui.add(Slider::new(&mut app.config.font_size, 1.0..=100.0));
+        });
+        ui.horizontal(|ui| {
+            ui.label("Game image height: ");
+            ui.add(Slider::new(&mut app.config.game_image_height, 1.0..=500.0));
+        });
+        ui.horizontal(|ui| {
+            ui.label("Category image height: ");
+            ui.add(Slider::new(
+                &mut app.config.category_image_height,
+                1.0..=500.0,
+            ));
         });
         ui.horizontal(|ui| {
             ui.label("Show a limited number of splits: ");
@@ -82,6 +93,41 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
                 app.chrono.set_format(chrono_format);
             }
         });
+        ui.horizontal(|ui| {
+            ui.label("Counter background color: ");
+            color_edit_button_srgb(ui, &mut app.config.background_color);
+            if ui.button("Default").clicked() {
+                app.config.background_color = Config::default().background_color;
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Counter default text color: ");
+            color_edit_button_srgb(ui, &mut app.config.text_color_default);
+            if ui.button("Default").clicked() {
+                app.config.text_color_default = Config::default().text_color_default;
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Counter no-hit text color: ");
+            color_edit_button_srgb(ui, &mut app.config.text_color_nohit);
+            if ui.button("Default").clicked() {
+                app.config.text_color_nohit = Config::default().text_color_nohit;
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Counter \"better than PB\" text color: ");
+            color_edit_button_srgb(ui, &mut app.config.text_color_better);
+            if ui.button("Default").clicked() {
+                app.config.text_color_better = Config::default().text_color_better;
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label("Counter \"worse than PB\" text color: ");
+            color_edit_button_srgb(ui, &mut app.config.text_color_worse);
+            if ui.button("Default").clicked() {
+                app.config.text_color_worse = Config::default().text_color_worse;
+            }
+        });
         ui.separator();
         ui.heading("Shortcuts");
         ui.horizontal(|ui| {
@@ -120,7 +166,10 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         if ui.button("Save config").clicked() {
             app.config.save();
             app.shortcut.as_ref().unwrap().save();
-            if let Some(category) = app.loaded_category.clone() {
+            if let Some(game) = &app.loaded_game {
+                game.save();
+            }
+            if let Some(category) = &app.loaded_category {
                 category.save();
             }
         }

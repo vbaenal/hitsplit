@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use crate::get_config_path;
@@ -8,6 +10,7 @@ use super::category::SmallCategory;
 pub struct Game {
     pub uuid: String,
     pub name: String,
+    pub icon_path: Option<PathBuf>,
     pub categories: Vec<SmallCategory>,
 }
 
@@ -16,7 +19,7 @@ impl Game {
         Game {
             uuid,
             name,
-            categories: Vec::new(),
+            ..Default::default()
         }
     }
 

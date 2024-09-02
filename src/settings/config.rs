@@ -23,6 +23,13 @@ pub struct OptionalConfig {
     counter_size: Option<Vec2>,
     columns: Option<ColumnVec>,
     chrono_format: Option<ChronometerFormat>,
+    game_image_height: Option<f32>,
+    category_image_height: Option<f32>,
+    background_color: Option<[u8; 3]>,
+    text_color_default: Option<[u8; 3]>,
+    text_color_nohit: Option<[u8; 3]>,
+    text_color_better: Option<[u8; 3]>,
+    text_color_worse: Option<[u8; 3]>,
 }
 
 impl OptionalConfig {
@@ -42,6 +49,13 @@ impl OptionalConfig {
             counter_size: self.counter_size.unwrap_or([280.0, 600.0].into()),
             columns: self.columns.clone().unwrap_or_default(),
             chrono_format: self.chrono_format.unwrap_or(ChronometerFormat::HHMMSSX),
+            game_image_height: self.game_image_height.unwrap_or(46.),
+            category_image_height: self.category_image_height.unwrap_or(40.),
+            background_color: self.background_color.unwrap_or([28, 28, 28]),
+            text_color_default: self.text_color_default.unwrap_or([240, 240, 240]),
+            text_color_nohit: self.text_color_nohit.unwrap_or([8, 250, 8]),
+            text_color_better: self.text_color_better.unwrap_or([250, 250, 8]),
+            text_color_worse: self.text_color_worse.unwrap_or([250, 8, 8]),
         }
     }
 }
@@ -59,6 +73,13 @@ pub struct Config {
     pub counter_size: Vec2,
     pub columns: ColumnVec,
     pub chrono_format: ChronometerFormat,
+    pub game_image_height: f32,
+    pub category_image_height: f32,
+    pub background_color: [u8; 3],
+    pub text_color_default: [u8; 3],
+    pub text_color_nohit: [u8; 3],
+    pub text_color_better: [u8; 3],
+    pub text_color_worse: [u8; 3],
 }
 
 impl Default for Config {
@@ -75,6 +96,13 @@ impl Default for Config {
             counter_size: [280.0, 600.0].into(),
             columns: ColumnVec::default(),
             chrono_format: ChronometerFormat::HHMMSSX,
+            game_image_height: 46.,
+            category_image_height: 40.,
+            background_color: [28, 28, 28],
+            text_color_default: [240, 240, 240],
+            text_color_nohit: [8, 250, 8],
+            text_color_better: [250, 250, 8],
+            text_color_worse: [250, 8, 8],
         }
     }
 }

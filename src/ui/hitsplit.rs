@@ -1,6 +1,7 @@
 use super::{
     counter::counter,
     panels::{left_panel, list::list, settings::configuration, Pages},
+    ChangeImage,
 };
 use crate::{
     run::{category::Category, chrono::Chronometer, game::Game},
@@ -38,7 +39,7 @@ pub struct HitSplit {
     pub capturing: Option<ShortcutAction>,
     pub opened_file: Option<PathBuf>,
     pub open_file_dialog: Option<FileDialog>,
-    pub change_split_img: Option<String>,
+    pub change_image: Option<ChangeImage>,
     pub chrono: Chronometer,
 }
 
@@ -67,7 +68,7 @@ impl Clone for HitSplit {
             capturing: self.capturing,
             opened_file: self.opened_file.clone(),
             open_file_dialog: None,
-            change_split_img: None,
+            change_image: None,
             chrono: self.chrono,
         }
     }
@@ -98,7 +99,7 @@ impl Default for HitSplit {
             capturing: None,
             opened_file: None,
             open_file_dialog: None,
-            change_split_img: None,
+            change_image: None,
             chrono: Chronometer::new(crate::run::chrono::ChronometerFormat::HHMMSSX),
         }
     }
@@ -150,8 +151,11 @@ impl eframe::App for HitSplit {
         if self.config.autosave {
             self.config.save();
             self.shortcut.as_ref().unwrap().save();
-            if let Some(cat) = &self.loaded_category {
-                cat.save();
+            if let Some(g) = &self.loaded_game {
+                g.save();
+            }
+            if let Some(c) = &self.loaded_category {
+                c.save();
             }
         }
     }
@@ -214,6 +218,9 @@ impl eframe::App for HitSplit {
         if !self.config.autosave {
             self.config.save();
             self.shortcut.as_ref().unwrap().save();
+            if let Some(g) = &self.loaded_game {
+                g.save();
+            }
             if let Some(cat) = &self.loaded_category {
                 cat.save();
             }

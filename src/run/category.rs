@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use crate::get_config_path;
@@ -8,6 +10,7 @@ use super::split::Split;
 pub struct Category {
     pub uuid: String,
     pub name: String,
+    pub icon_path: Option<PathBuf>,
     pub splits: Vec<Split>,
 }
 
@@ -16,7 +19,7 @@ impl Category {
         Category {
             uuid,
             name,
-            splits: Vec::new(),
+            ..Default::default()
         }
     }
 

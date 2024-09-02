@@ -2,36 +2,52 @@ use std::cmp::min;
 
 use egui::{Color32, Context, Sense};
 
-use crate::{
-    run::{category::Category, game::Game},
-    settings::columns::Column,
-    HitSplit,
-};
+use crate::{settings::columns::Column, HitSplit};
 
 pub fn counter(app: &mut HitSplit, ctx: &Context) {
+    let bg = &app.config.background_color;
     let counter_clicked = egui::CentralPanel::default()
+        .frame(egui::Frame {
+            fill: Color32::from_rgb(bg[0], bg[1], bg[2]),
+            ..Default::default()
+        })
         .show(ctx, |ui| {
-            ui.style_mut()
+            let tc = &app.config.text_color_default;
+            let color = Color32::from_rgb(tc[0], tc[1], tc[2]);
+
+            let style = ui.style_mut();
+            style
                 .text_styles
                 .get_mut(&egui::TextStyle::Body)
                 .unwrap()
                 .size = app.config.font_size;
             ui.vertical_centered(|ui| {
-                ui.label(match &app.loaded_game {
-                    Some(game) => game.name.clone(),
-                    None => Game::default().name,
-                });
+                if let Some(game) = &app.loaded_game {
+                    if let Some(img) = &game.icon_path {
+                        let path = img.as_path().to_str().unwrap();
+                        ui.add(
+                            egui::Image::new(format!("file://{path}"))
+                                .max_height(app.config.game_image_height),
+                        );
+                    } else {
+                        ui.colored_label(color, game.name.clone());
+                    }
+                }
             });
-            if app.loaded_category.is_some() {
-                ui.vertical_centered(|ui| {
-                    ui.label(match &app.loaded_category {
-                        Some(category) => category.name.clone(),
-                        None => Category::default().name,
-                    });
-                });
-            }
-
-            ui.vertical(|ui| {
+            ui.vertical_centered(|ui| {
+                if let Some(category) = &app.loaded_category {
+                    if let Some(img) = &category.icon_path {
+                        let path = img.as_path().to_str().unwrap();
+                        ui.add(
+                            egui::Image::new(format!("file://{path}"))
+                                .max_height(app.config.category_image_height),
+                        );
+                    } else {
+                        ui.colored_label(color, category.name.clone());
+                    }
+                }
+            });
+            ui.vertical_centered(|ui| {
                 let available_height = ui.available_height();
                 let mut table = egui_extras::TableBuilder::new(ui)
                     .striped(false)
@@ -51,10 +67,6 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                     })
                 }
 
-                let mut color = Color32::from_rgb(250, 250, 250);
-                if !app.config.dark_mode {
-                    color = Color32::from_rgb(8, 8, 8)
-                }
                 let binding = Vec::new();
                 let splits = match &app.loaded_category {
                     Some(category) => &category.splits,
@@ -88,13 +100,19 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
                             .for_each(|(i, split)| {
                                 let mut label_color = color;
                                 if i <= app.selected_split {
+                                    let color_array: [u8; 3];
                                     if split.hits == 0 {
-                                        label_color = Color32::from_rgb(8, 250, 8);
+                                        color_array = app.config.text_color_nohit;
                                     } else if split.hits < split.pb {
-                                        label_color = Color32::from_rgb(250, 250, 8);
+                                        color_array = app.config.text_color_better;
                                     } else {
-                                        label_color = Color32::from_rgb(250, 8, 8);
+                                        color_array = app.config.text_color_worse;
                                     }
+                                    label_color = Color32::from_rgb(
+                                        color_array[0],
+                                        color_array[1],
+                                        color_array[2],
+                                    );
                                 }
                                 body.row(app.config.font_size + 5.0, |mut row| {
                                     for column in app.config.columns.iter() {
