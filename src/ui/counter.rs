@@ -6,11 +6,10 @@ use crate::{settings::columns::Column, HitSplit};
 
 pub fn counter(app: &mut HitSplit, ctx: &Context) {
     let bg = &app.config.background_color;
-    let bg: [u8; 4] = [bg[0], bg[1], bg[2], app.config.background_transparency];
     let fill_color = if cfg!(target_os = "windows") {
-        Color32::from_rgba_unmultiplied(bg[0], bg[1], bg[2], bg[3])
+        Color32::from_rgb(bg[0], bg[1], bg[2])
     } else {
-        Color32::from_rgba_premultiplied(bg[0], bg[1], bg[2], bg[3])
+        Color32::from_rgba_premultiplied(bg[0], bg[1], bg[2], app.config.background_transparency)
     };
     let counter_clicked = egui::CentralPanel::default()
         .frame(egui::Frame {

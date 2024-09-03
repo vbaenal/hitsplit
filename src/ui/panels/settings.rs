@@ -93,13 +93,15 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
                 app.chrono.set_format(chrono_format);
             }
         });
-        ui.horizontal(|ui| {
-            ui.label("Counter background transparency: ");
-            ui.add(Slider::new(
-                &mut app.config.background_transparency,
-                0..=255,
-            ));
-        });
+        if cfg!(target_os = "linux") {
+            ui.horizontal(|ui| {
+                ui.label("Counter background transparency: ");
+                ui.add(Slider::new(
+                    &mut app.config.background_transparency,
+                    0..=255,
+                ));
+            });
+        }
         ui.horizontal(|ui| {
             ui.label("Counter background color: ");
             color_edit_button_srgb(ui, &mut app.config.background_color);
