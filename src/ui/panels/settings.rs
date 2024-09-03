@@ -94,6 +94,13 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
             }
         });
         ui.horizontal(|ui| {
+            ui.label("Counter background transparency: ");
+            ui.add(Slider::new(
+                &mut app.config.background_transparency,
+                0..=255,
+            ));
+        });
+        ui.horizontal(|ui| {
             ui.label("Counter background color: ");
             color_edit_button_srgb(ui, &mut app.config.background_color);
             if ui.button("Default").clicked() {
