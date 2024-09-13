@@ -167,6 +167,15 @@ impl eframe::App for HitSplit {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.config.dark_mode = ctx.style().visuals.dark_mode;
+        if self.config.always_on_top {
+            ctx.send_viewport_cmd(egui::ViewportCommand::WindowLevel(
+                egui::WindowLevel::AlwaysOnTop,
+            ));
+        } else {
+            ctx.send_viewport_cmd(egui::ViewportCommand::WindowLevel(
+                egui::WindowLevel::Normal,
+            ));
+        }
 
         if self.capturing.is_none() {
             shortcut_handler(self);

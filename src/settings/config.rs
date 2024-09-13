@@ -31,6 +31,7 @@ pub struct OptionalConfig {
     text_color_nohit: Option<[u8; 3]>,
     text_color_better: Option<[u8; 3]>,
     text_color_worse: Option<[u8; 3]>,
+    always_on_top: Option<bool>,
 }
 
 impl OptionalConfig {
@@ -58,6 +59,7 @@ impl OptionalConfig {
             text_color_nohit: self.text_color_nohit.unwrap_or([8, 250, 8]),
             text_color_better: self.text_color_better.unwrap_or([250, 250, 8]),
             text_color_worse: self.text_color_worse.unwrap_or([250, 8, 8]),
+            always_on_top: self.always_on_top.unwrap_or(true),
         }
     }
 }
@@ -83,6 +85,7 @@ pub struct Config {
     pub text_color_nohit: [u8; 3],
     pub text_color_better: [u8; 3],
     pub text_color_worse: [u8; 3],
+    pub always_on_top: bool,
 }
 
 impl Default for Config {
@@ -107,6 +110,7 @@ impl Default for Config {
             text_color_nohit: [8, 250, 8],
             text_color_better: [250, 250, 8],
             text_color_worse: [250, 8, 8],
+            always_on_top: true,
         }
     }
 }

@@ -137,6 +137,10 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
                 app.config.text_color_worse = Config::default().text_color_worse;
             }
         });
+        ui.horizontal(|ui| {
+            ui.label("Counter always on top: ");
+            ui.checkbox(&mut app.config.always_on_top, "");
+        });
         ui.separator();
         ui.heading("Shortcuts");
         ui.horizontal(|ui| {
