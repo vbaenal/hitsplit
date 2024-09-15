@@ -1,10 +1,10 @@
 use std::{ffi::OsStr, path::Path};
 
 use egui::{Color32, Context};
-use egui_file::FileDialog;
 use uuid::Uuid;
 
 use crate::{
+    get_file_dialog,
     run::{
         category::{Category, SmallCategory},
         game::{Game, SmallGame},
@@ -263,9 +263,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 .any(|fe| fe.map(OsStr::new) == path.extension())
                         }
                     });
-                    let mut dialog =
-                        FileDialog::open_file(Some(g.icon_path.clone().unwrap_or_default()))
-                            .show_files_filter(filter);
+                    let mut dialog = get_file_dialog(g.icon_path.clone()).show_files_filter(filter);
                     dialog.open();
                     app.change_image = Some(ChangeImage::Game);
                     app.open_file_dialog = Some(dialog);
@@ -336,8 +334,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             }
                         });
                         let mut dialog =
-                            FileDialog::open_file(Some(g.icon_path.clone().unwrap_or_default()))
-                                .show_files_filter(filter);
+                            get_file_dialog(c.icon_path.clone()).show_files_filter(filter);
                         dialog.open();
                         app.change_image = Some(ChangeImage::Category);
                         app.open_file_dialog = Some(dialog);
@@ -446,7 +443,7 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                     }
                                                 });
                                                 let mut dialog =
-                                                    FileDialog::open_file(Some(p.to_path_buf()))
+                                                    get_file_dialog(Some(p.to_path_buf()))
                                                         .show_files_filter(filter);
                                                 dialog.open();
                                                 app.open_file_dialog = Some(dialog);
@@ -462,8 +459,8 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                     })
                                                 }
                                             });
-                                            let mut dialog = FileDialog::open_file(None)
-                                                .show_files_filter(filter);
+                                            let mut dialog =
+                                                get_file_dialog(None).show_files_filter(filter);
                                             dialog.open();
                                             app.open_file_dialog = Some(dialog);
                                             app.change_image.clone_from(&Some(ChangeImage::Split(
