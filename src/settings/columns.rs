@@ -82,11 +82,12 @@ impl Column {
             Column::Icon => {
                 row.col(|ui| {
                     if let Some(p) = &split.icon_path {
-                        let path = p.as_path().to_str().unwrap();
-                        ui.add(
-                            egui::Image::new(format!("file://{path}"))
-                                .max_height(app.config.font_size),
-                        );
+                        if let Some(path) = p.as_path().to_str() {
+                            ui.add(
+                                egui::Image::new(format!("file://{path}"))
+                                    .max_height(app.config.font_size),
+                            );
+                        };
                     }
                 });
             }

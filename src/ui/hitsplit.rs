@@ -1,6 +1,6 @@
 use super::{
     counter::counter,
-    panels::{left_panel, list::list, settings::configuration, Pages},
+    panels::{bottom_panel, left_panel, list::list, settings::configuration, Pages},
     ChangeImage,
 };
 use crate::{
@@ -9,6 +9,7 @@ use crate::{
         config::Config,
         shortcut::{shortcut_handler, Shortcut, ShortcutAction},
     },
+    Error,
 };
 use eframe::{egui::Visuals, Storage};
 use egui::Vec2;
@@ -41,6 +42,7 @@ pub struct HitSplit {
     pub open_file_dialog: Option<FileDialog>,
     pub change_image: Option<ChangeImage>,
     pub chrono: Chronometer,
+    pub error: Error,
 }
 
 impl Clone for HitSplit {
@@ -70,6 +72,7 @@ impl Clone for HitSplit {
             open_file_dialog: None,
             change_image: None,
             chrono: self.chrono,
+            error: self.error.clone(),
         }
     }
 }
@@ -101,35 +104,40 @@ impl Default for HitSplit {
             open_file_dialog: None,
             change_image: None,
             chrono: Chronometer::new(crate::run::chrono::ChronometerFormat::HHMMSSX),
+            error: Error::None,
         }
     }
 }
 
 impl HitSplit {
     fn add_hotkey(&mut self, code: Code) {
-        self.hotkey_manager
-            .as_ref()
-            .unwrap()
-            .register(Shortcut::code_to_hotkey(code))
-            .unwrap();
+        match self.hotkey_manager.as_ref() {
+            Some(mngr) => {
+                if let Err(e) = mngr.register(Shortcut::code_to_hotkey(code)) {
+                    self.error =
+                        Error::new(format!("Failed to register hotkey {}", code), e.to_string());
+                }
+            }
+            None => {
+                self.error = Error::new("Failed to get hotkey manager".to_string(), "".to_string())
+            }
+        };
     }
 
     fn manage_hotkeys(&mut self) {
-        self.hotkey_manager = Some(GlobalHotKeyManager::new().unwrap());
-        if self.shortcut.is_some() && self.hotkey_manager.is_some() {
-            self.shortcut
-                .clone()
-                .unwrap()
-                .0
-                .iter()
-                .for_each(|&c| self.add_hotkey(c));
+        match GlobalHotKeyManager::new() {
+            Ok(mngr) => self.hotkey_manager = Some(mngr),
+            Err(_) => self.hotkey_manager = None,
+        };
+        if let Some(sc) = self.shortcut.clone() {
+            sc.0.iter().for_each(|&c| self.add_hotkey(c));
         }
     }
 
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut app: HitSplit = HitSplit {
-            config: Config::load(),
-            shortcut: Some(Shortcut::load()),
+            config: Config::load().unwrap_or_default(),
+            shortcut: Some(Shortcut::load().unwrap_or_default()),
             ..Default::default()
         };
         app.chrono.set_format(&app.config.chrono_format);
@@ -144,19 +152,33 @@ impl HitSplit {
         egui_extras::install_image_loaders(&cc.egui_ctx);
         app
     }
+
+    fn save_files(&mut self) {
+        if let Err(e) = self.config.save() {
+            self.error = e;
+        }
+        if let Some(s) = &self.shortcut {
+            if let Err(e) = s.save() {
+                self.error = e;
+            }
+        }
+        if let Some(g) = &self.loaded_game {
+            if let Err(e) = g.save() {
+                self.error = e;
+            }
+        }
+        if let Some(c) = &self.loaded_category {
+            if let Err(e) = c.save() {
+                self.error = e;
+            }
+        }
+    }
 }
 
 impl eframe::App for HitSplit {
     fn save(&mut self, _storage: &mut dyn Storage) {
         if self.config.autosave {
-            self.config.save();
-            self.shortcut.as_ref().unwrap().save();
-            if let Some(g) = &self.loaded_game {
-                g.save();
-            }
-            if let Some(c) = &self.loaded_category {
-                c.save();
-            }
+            self.save_files();
         }
     }
 
@@ -178,12 +200,18 @@ impl eframe::App for HitSplit {
         }
 
         if self.capturing.is_none() {
-            shortcut_handler(self);
+            match shortcut_handler(self) {
+                Ok(_) => (),
+                Err(e) => self.error = e,
+            };
         }
 
         if let Some(category) = self.loaded_category.as_mut() {
             if let Some(split) = category.splits.get_mut(self.selected_split) {
-                split.real_time = self.chrono.get_time();
+                match self.chrono.get_time() {
+                    Ok(rt) => split.real_time = rt,
+                    Err(e) => self.error = e,
+                };
             }
         }
 
@@ -212,6 +240,8 @@ impl eframe::App for HitSplit {
                         Pages::List => list(self, ctx),
                         Pages::Settings => configuration(self, ctx),
                     }
+                    bottom_panel(self, ctx);
+
                     if ctx.input(|i| i.raw.viewport().close_requested()) {
                         self.show_config = false;
                     }
@@ -224,15 +254,6 @@ impl eframe::App for HitSplit {
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        if !self.config.autosave {
-            self.config.save();
-            self.shortcut.as_ref().unwrap().save();
-            if let Some(g) = &self.loaded_game {
-                g.save();
-            }
-            if let Some(cat) = &self.loaded_category {
-                cat.save();
-            }
-        }
+        self.save_files();
     }
 }

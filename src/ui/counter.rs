@@ -20,20 +20,20 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
             let tc = &app.config.text_color_default;
             let color = Color32::from_rgb(tc[0], tc[1], tc[2]);
 
-            let style = ui.style_mut();
-            style
-                .text_styles
-                .get_mut(&egui::TextStyle::Body)
-                .unwrap()
-                .size = app.config.font_size;
+            if let Some(style) = ui.style_mut().text_styles.get_mut(&egui::TextStyle::Body) {
+                style.size = app.config.font_size;
+            };
             ui.vertical_centered(|ui| {
                 if let Some(game) = &app.loaded_game {
                     if let Some(img) = &game.icon_path {
-                        let path = img.as_path().to_str().unwrap();
-                        ui.add(
-                            egui::Image::new(format!("file://{path}"))
-                                .max_height(app.config.game_image_height),
-                        );
+                        if let Some(path) = img.as_path().to_str() {
+                            ui.add(
+                                egui::Image::new(format!("file://{path}"))
+                                    .max_height(app.config.game_image_height),
+                            );
+                        } else {
+                            ui.colored_label(color, game.name.clone());
+                        }
                     } else {
                         ui.colored_label(color, game.name.clone());
                     }
@@ -42,11 +42,14 @@ pub fn counter(app: &mut HitSplit, ctx: &Context) {
             ui.vertical_centered(|ui| {
                 if let Some(category) = &app.loaded_category {
                     if let Some(img) = &category.icon_path {
-                        let path = img.as_path().to_str().unwrap();
-                        ui.add(
-                            egui::Image::new(format!("file://{path}"))
-                                .max_height(app.config.category_image_height),
-                        );
+                        if let Some(path) = img.as_path().to_str() {
+                            ui.add(
+                                egui::Image::new(format!("file://{path}"))
+                                    .max_height(app.config.category_image_height),
+                            );
+                        } else {
+                            ui.colored_label(color, category.name.clone());
+                        }
                     } else {
                         ui.colored_label(color, category.name.clone());
                     }

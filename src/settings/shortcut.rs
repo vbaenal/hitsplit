@@ -12,7 +12,7 @@ use crate::{
     run::manager::{
         add_hit, next_split, pause_chrono, prev_split, reset, set_pb, start_chrono, sub_hit,
     },
-    HitSplit,
+    Error, HitSplit,
 };
 
 use super::key_to_code;
@@ -57,7 +57,7 @@ impl ShortcutAction {
         }
     }
 
-    pub fn to_function(self) -> impl Fn(&mut HitSplit) {
+    pub fn to_function(self) -> impl Fn(&mut HitSplit) -> Result<(), Error> {
         match self {
             ShortcutAction::PrevSplit => prev_split,
             ShortcutAction::NextSplit => next_split,
@@ -71,7 +71,6 @@ impl ShortcutAction {
     }
 
     pub fn change_shortcut(app: &mut HitSplit, action: &ShortcutAction, key: &Key) {
-        //let shortcut = &mut app.shortcut.as_mut().unwrap().0;
         if let Some(shortcut) = app.shortcut.as_mut() {
             if !shortcut.0.contains(&key_to_code(key)) {
                 if let Some(sc) = shortcut.0.get_mut(action.to_usize()) {
@@ -101,13 +100,30 @@ impl Default for Shortcut {
 }
 
 impl Shortcut {
-    pub fn save(&self) {
+    pub fn save(&self) -> Result<(), Error> {
         let config_path = get_config_path();
-        let shortcuts_str = serde_json::to_string(self).unwrap();
-        std::fs::write(format!("{config_path}/shortcuts.json"), shortcuts_str).unwrap();
+        let shortcuts_str = match serde_json::to_string(self) {
+            Ok(sc) => sc,
+            Err(e) => {
+                return Err(Error::new(
+                    format!("Could not save shortcuts in path \"{config_path}/shortcuts.json\""),
+                    e.to_string(),
+                ))
+            }
+        };
+        match std::fs::write(format!("{config_path}/shortcuts.json"), shortcuts_str) {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(Error::new(
+                    format!("Error saving file \"shortcuts.json\" at location \"{config_path}\""),
+                    e.to_string(),
+                ))
+            }
+        };
+        Ok(())
     }
 
-    pub fn load() -> Self {
+    pub fn load() -> Result<Self, Error> {
         let config_path = get_config_path();
         if read_dir(&config_path).is_err() {
             let _ = std::fs::create_dir(&config_path);
@@ -117,22 +133,42 @@ impl Shortcut {
             match std::fs::read_to_string(format!("{config_path}/shortcuts.json")) {
                 Err(_) => {
                     let tmp: Shortcut = Default::default();
-                    let shortcuts_str = serde_json::to_string(&tmp).unwrap();
-                    std::fs::write(
-                        format!("{config_path}/shortcuts.json"),
-                        shortcuts_str.clone(),
-                    )
-                    .unwrap();
-                    shortcuts_str
+                    let shortcuts_str = match serde_json::to_string(&tmp) {
+                        Ok(cfg) => cfg,
+                        Err(e) => return Err(Error::new(
+                            "Could not parse config default string. Please file an issue on github."
+                                .to_string(),
+                            e.to_string(),
+                        )),
+                    };
+                    match std::fs::write(
+                    format!("{config_path}/shortcuts.json"),
+                    shortcuts_str.clone(),
+                ) {
+                    Ok(_) => shortcuts_str,
+                    Err(e) => return Err(Error::new(
+                        "Could not parse shortcut default string. Please file an issue on github."
+                            .to_string(),
+                        e.to_string(),
+                    )),
+                }
                 }
                 Ok(f) => f,
             };
 
-        let shortcuts = serde_json::from_str::<Shortcut>(shortcuts_json.as_str()).unwrap();
+        let shortcuts = match serde_json::from_str::<Shortcut>(shortcuts_json.as_str()) {
+            Ok(sc) => sc,
+            Err(e) => {
+                return Err(Error::new(
+                    "Could not parse json as shortcuts.".to_string(),
+                    e.to_string(),
+                ))
+            }
+        };
         if shortcuts.0.len() < 8 {
-            return Shortcut::default();
+            return Ok(Shortcut::default());
         }
-        shortcuts
+        Ok(shortcuts)
     }
 
     pub fn code_to_hotkey(code: Code) -> HotKey {
@@ -144,18 +180,29 @@ impl Shortcut {
     }
 }
 
-pub fn shortcut_handler(app: &mut HitSplit) {
+pub fn shortcut_handler(app: &mut HitSplit) -> Result<(), Error> {
     let receiver = GlobalHotKeyEvent::receiver();
     if let Ok(event) = receiver.try_recv() {
         if event.state == HotKeyState::Pressed {
-            let shortcut = &app.shortcut.as_ref().unwrap().0;
-            let index = shortcut
-                .iter()
-                .enumerate()
-                .find(|(_, &c)| event.id == Shortcut::code_to_id(c))
-                .unwrap()
-                .0;
-            ShortcutAction::from_usize(index).unwrap().to_function()(app);
+            if let Some(ref shortcut) = app.shortcut {
+                if let Some(index) = shortcut
+                    .0
+                    .iter()
+                    .enumerate()
+                    .find(|(_, &c)| event.id == Shortcut::code_to_id(c))
+                {
+                    match ShortcutAction::from_usize(index.0) {
+                        Some(sa) => return sa.to_function()(app),
+                        None => {
+                            return Err(Error::new(
+                                "Action not found. Please file an issue on github.".to_string(),
+                                "None".to_string(),
+                            ))
+                        }
+                    }
+                }
+            }
         }
     }
+    Ok(())
 }

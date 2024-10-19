@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     get_config_path,
     run::{chrono::ChronometerFormat, game::SmallGame},
+    Error,
 };
 
 use super::columns::ColumnVec;
@@ -116,41 +117,100 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn save(&mut self) {
-        let config_path = get_config_path();
-        let config_str = serde_json::to_string(self).unwrap();
-        let _ = std::fs::write(format!("{config_path}/config.json"), config_str);
+    pub fn save(&mut self) -> Result<(), Error> {
+        let config_path: String = get_config_path();
+        match serde_json::to_string(self) {
+            Ok(config_str) => {
+                match std::fs::write(format!("{config_path}/config.json"), config_str) {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(Error::new(
+                        format!("Error saving file \"config.json\" at location \"{config_path}\""),
+                        e.to_string(),
+                    )),
+                }
+            }
+            Err(e) => Err(Error::new(
+                "Could not convert Config into String".to_string(),
+                e.to_string(),
+            )),
+        }
     }
 
-    pub fn load() -> Self {
+    pub fn load() -> Result<Self, Error> {
         let config_path = get_config_path();
 
         if read_dir(&config_path).is_err() {
-            let _ = std::fs::create_dir(&config_path);
+            match std::fs::create_dir(&config_path) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(Error::new(
+                        format!("Could not create config directory: \"{config_path}\""),
+                        e.to_string(),
+                    ))
+                }
+            };
         }
 
         if read_dir(format!("{config_path}/games")).is_err() {
-            let _ = std::fs::create_dir(format!("{config_path}/games"));
+            match std::fs::create_dir(format!("{config_path}/games")) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(Error::new(
+                        format!("Could not create games directory: \"{config_path}/games\""),
+                        e.to_string(),
+                    ))
+                }
+            };
         }
 
         if read_dir(format!("{config_path}/categories")).is_err() {
-            let _ = std::fs::create_dir(format!("{config_path}/categories"));
+            match std::fs::create_dir(format!("{config_path}/categories")) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(Error::new(
+                        format!(
+                            "Could not create categories directory: \"{config_path}/categories\""
+                        ),
+                        e.to_string(),
+                    ))
+                }
+            };
         }
 
         let config_json: String =
             match std::fs::read_to_string(format!("{config_path}/config.json")) {
                 Err(_) => {
                     let tmp: Config = Default::default();
-                    let config_str = serde_json::to_string(&tmp).unwrap();
-                    let _ =
-                        std::fs::write(format!("{config_path}/config.json"), config_str.clone());
+                    let config_str = match serde_json::to_string(&tmp) {
+                    Ok(cfg) => cfg,
+                    Err(e) => return Err(Error::new(
+                        "Could not parse config default string. Please file an issue on github."
+                            .to_string(),
+                        e.to_string(),
+                    )),
+                };
+                    match std::fs::write(format!("{config_path}/config.json"), config_str.clone()) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(Error::new(
+                                format!(
+                                "Could not create file config.json: \"{config_path}/config.json\""
+                            ),
+                                e.to_string(),
+                            ))
+                        }
+                    };
                     config_str
                 }
                 Ok(f) => f,
             };
 
-        serde_json::from_str::<OptionalConfig>(config_json.as_str())
-            .unwrap()
-            .to_config()
+        match serde_json::from_str::<OptionalConfig>(config_json.as_str()) {
+            Ok(cfg) => Ok(cfg.to_config()),
+            Err(e) => Err(Error::new(
+                "Could not load config from read json file".to_string(),
+                e.to_string(),
+            )),
+        }
     }
 }

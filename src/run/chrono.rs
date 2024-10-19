@@ -5,6 +5,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::Error;
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 enum ChronometerState {
     Stopped,
@@ -73,12 +75,20 @@ impl Chronometer {
         self.state = ChronometerState::Running;
     }
 
-    pub fn pause(&mut self) {
+    pub fn pause(&mut self) -> Result<(), Error> {
         if self.state == ChronometerState::Running {
-            self.elapsed =
-                Some(self.start_time.unwrap().elapsed() + self.elapsed.unwrap_or_default());
+            let start_time = match self.start_time {
+                Some(st) => st,
+                None => return Err(Error::new(
+                    "Could not pause. Try pressing the \"Start chrono\" key again before pausing."
+                        .to_string(),
+                    "None".to_string(),
+                )),
+            };
+            self.elapsed = Some(start_time.elapsed() + self.elapsed.unwrap_or_default());
             self.state = ChronometerState::Paused;
         }
+        Ok(())
     }
 
     pub fn reset(&mut self) {
@@ -89,12 +99,22 @@ impl Chronometer {
         }
     }
 
-    pub fn get_time(&self) -> Duration {
+    pub fn get_time(&self) -> Result<Duration, Error> {
         let mut time = self.elapsed.unwrap_or_default();
         if self.state == ChronometerState::Running {
-            time += self.start_time.unwrap().elapsed();
+            let start_time = match self.start_time {
+                Some(st) => st,
+                None => {
+                    return Err(Error::new(
+                        "Could not get time. Try pressing the \"Start chrono\" key again."
+                            .to_string(),
+                        "None".to_string(),
+                    ))
+                }
+            };
+            time += start_time.elapsed();
         }
-        time
+        Ok(time)
     }
 }
 

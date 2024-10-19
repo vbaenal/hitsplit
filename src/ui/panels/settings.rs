@@ -4,7 +4,7 @@ use crate::{
     run::chrono::ChronometerFormat,
     settings::{config::Config, shortcut::ShortcutAction},
     ui::functions::{numeric_edit_field_u64, shortcut_button},
-    HitSplit,
+    Error, HitSplit,
 };
 
 pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
@@ -12,7 +12,7 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         ui.heading("Configuration");
         ui.horizontal(|ui| {
             ui.label("Visual mode: ");
-            egui::widgets::global_dark_light_mode_buttons(ui);
+            egui::widgets::global_theme_preference_buttons(ui);
         });
         ui.horizontal(|ui| {
             ui.label("Autosave: ");
@@ -84,7 +84,7 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
                     "MM:SS.cs",
                 );
             };
-            if egui::ComboBox::from_id_source("chrono_format")
+            if egui::ComboBox::from_id_salt("chrono_format")
                 .selected_text(chrono_format.text())
                 .show_ui(ui, fun)
                 .response
@@ -177,13 +177,28 @@ pub fn configuration(app: &mut HitSplit, ctx: &egui::Context) {
         });
 
         if ui.button("Save config").clicked() {
-            app.config.save();
-            app.shortcut.as_ref().unwrap().save();
+            match app.shortcut.as_ref() {
+                Some(sc) => {
+                    if let Err(e) = sc.save() {
+                        app.error = e;
+                    }
+                }
+                None => {
+                    app.error = Error::new(
+                        "Could not save config due to shortcuts. Please file an issue.".to_string(),
+                        "None".to_string(),
+                    )
+                }
+            };
             if let Some(game) = &app.loaded_game {
-                game.save();
+                if let Err(e) = game.save() {
+                    app.error = e;
+                };
             }
             if let Some(category) = &app.loaded_category {
-                category.save();
+                if let Err(e) = category.save() {
+                    app.error = e;
+                };
             }
         }
     });

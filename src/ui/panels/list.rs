@@ -43,11 +43,18 @@ fn add_game(app: &mut HitSplit, ctx: &Context) {
                             name: app.add_game_name.clone(),
                         });
                         let game = Game::new(uuid, app.add_game_name.clone());
-                        game.save();
+                        if let Err(e) = game.save() {
+                            app.error = e;
+                        }
                         app.add_game_name = "".to_string();
                         app.add_game_empty = false;
                         app.add_game_open = false;
-                        app.config.save();
+                        if app.config.save().is_err() {
+                            ui.colored_label(
+                                Color32::from_rgb(250, 16, 16),
+                                "Could not save config",
+                            );
+                        };
                         app.num_splits_category = 0;
                         app.loaded_category = None;
                         app.loaded_game = Some(game);
@@ -78,20 +85,28 @@ fn modify_game(app: &mut HitSplit, ctx: &Context) {
                 if ui.small_button("Change name").clicked() {
                     if app.add_game_name.eq("") {
                         app.add_game_empty = true;
-                    } else {
-                        let game = app.loaded_game.as_mut().unwrap();
+                    } else if let Some(game) = app.loaded_game.as_mut() {
                         game.change_name(&app.add_game_name);
-                        app.config
+                        if let Some(game) = app
+                            .config
                             .game_list
                             .iter_mut()
                             .find(|sg| sg.uuid == game.uuid)
-                            .unwrap()
-                            .change_name(&app.add_game_name);
-                        game.save();
+                        {
+                            game.change_name(&app.add_game_name)
+                        };
+                        if let Err(e) = game.save() {
+                            app.error = e;
+                        }
                         app.add_game_name = "".to_string();
                         app.add_game_empty = false;
                         app.modify_game_open = false;
-                        app.config.save();
+                        if app.config.save().is_err() {
+                            ui.colored_label(
+                                Color32::from_rgb(250, 16, 16),
+                                "Could not save config",
+                            );
+                        };
                     }
                 }
                 if ui.small_button("Cancel").clicked() {
@@ -122,8 +137,7 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
                 if ui.small_button("Add").clicked() {
                     if app.add_category_name.eq("") {
                         app.add_category_empty = true;
-                    } else {
-                        let game: &mut Game = app.loaded_game.as_mut().unwrap();
+                    } else if let Some(game) = app.loaded_game.as_mut() {
                         let uuid: String = Uuid::new_v4().to_string();
                         app.add_category_open = false;
                         game.categories.push(SmallCategory {
@@ -133,8 +147,12 @@ fn add_category(app: &mut HitSplit, ctx: &Context) {
                         let category = Category::new(uuid.clone(), app.add_category_name.clone());
                         app.add_category_name = "".to_string();
                         app.add_category_empty = false;
-                        game.save();
-                        category.save();
+                        if let Err(e) = game.save() {
+                            app.error = e;
+                        }
+                        if let Err(e) = category.save() {
+                            app.error = e;
+                        }
                         app.loaded_category = Some(category);
                         app.num_splits_category = 0;
                     }
@@ -167,21 +185,29 @@ fn modify_category(app: &mut HitSplit, ctx: &Context) {
                 if ui.small_button("Change name").clicked() {
                     if app.add_category_name.eq("") {
                         app.add_category_empty = true;
-                    } else {
-                        let game: &mut Game = app.loaded_game.as_mut().unwrap();
-                        let category = app.loaded_category.as_mut().unwrap();
-                        category.change_name(&app.add_category_name);
-                        game.categories
-                            .iter_mut()
-                            .find(|sg| sg.uuid == category.uuid)
-                            .unwrap()
-                            .change_name(&app.add_category_name);
-                        category.save();
-                        app.add_category_name = "".to_string();
-                        app.add_category_empty = false;
-                        game.save();
-                        category.save();
-                        app.modify_category_open = false;
+                    } else if let Some(game) = app.loaded_game.as_mut() {
+                        if let Some(category) = app.loaded_category.as_mut() {
+                            category.change_name(&app.add_category_name);
+                            if let Some(cat) = game
+                                .categories
+                                .iter_mut()
+                                .find(|sg| sg.uuid == category.uuid)
+                            {
+                                cat.change_name(&app.add_category_name);
+                            };
+                            if let Err(e) = category.save() {
+                                app.error = e;
+                            }
+                            app.add_category_name = "".to_string();
+                            app.add_category_empty = false;
+                            if let Err(e) = game.save() {
+                                app.error = e;
+                            }
+                            if let Err(e) = category.save() {
+                                app.error = e;
+                            }
+                            app.modify_category_open = false;
+                        };
                     }
                 }
                 if ui.small_button("Cancel").clicked() {
@@ -243,7 +269,13 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             .clicked()
                         {
                             app.loaded_category = None;
-                            app.loaded_game = Some(Game::load(selected_game.clone()));
+                            app.loaded_game = match Game::load(selected_game.clone()) {
+                                Ok(g) => Some(g),
+                                Err(e) => {
+                                    app.error = e;
+                                    None
+                                }
+                            };
                         }
                     });
                 });
@@ -302,19 +334,21 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 .clicked()
                             {
                                 app.loaded_category =
-                                    Some(Category::load(selected_category.to_string()));
-                                app.num_splits_category =
-                                    app.loaded_category.as_ref().unwrap().splits.len();
-                                app.loaded_category
-                                    .as_mut()
-                                    .unwrap()
-                                    .splits
-                                    .iter_mut()
-                                    .for_each(|s| {
-                                        if s.uuid.is_none() {
-                                            s.uuid = Some(Uuid::new_v4().to_string());
+                                    match Category::load(selected_category.to_string()) {
+                                        Ok(mut c) => {
+                                            app.num_splits_category = c.splits.len();
+                                            c.splits.iter_mut().for_each(|s| {
+                                                if s.uuid.is_none() {
+                                                    s.uuid = Some(Uuid::new_v4().to_string());
+                                                }
+                                            });
+                                            Some(c)
                                         }
-                                    });
+                                        Err(e) => {
+                                            app.error = e;
+                                            None
+                                        }
+                                    };
                             };
                         });
                     });
@@ -363,7 +397,9 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                             c.splits.push(split);
                         }
                     }
-                    c.save();
+                    if let Err(e) = c.save() {
+                        app.error = e;
+                    }
                 }
 
                 ui.separator();
@@ -425,32 +461,36 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                 body.row(24., |mut row| {
                                     row.col(|ui| {
                                         if let Some(p) = &split.icon_path {
-                                            let path = p.to_str().unwrap();
-                                            if ui
-                                                .add(image_button(
-                                                    format!("file://{path}"),
-                                                    16.0,
-                                                    16.0,
-                                                    0.0,
-                                                ))
-                                                .clicked()
-                                            {
-                                                let filter = Box::new({
-                                                    move |path: &Path| -> bool {
-                                                        FILE_EXTENSIONS.iter().any(|fe| {
-                                                            fe.map(OsStr::new) == path.extension()
-                                                        })
+                                            if let Some(path) = p.to_str() {
+                                                if ui
+                                                    .add(image_button(
+                                                        format!("file://{path}"),
+                                                        16.0,
+                                                        16.0,
+                                                        0.0,
+                                                    ))
+                                                    .clicked()
+                                                {
+                                                    let filter = Box::new({
+                                                        move |path: &Path| -> bool {
+                                                            FILE_EXTENSIONS.iter().any(|fe| {
+                                                                fe.map(OsStr::new)
+                                                                    == path.extension()
+                                                            })
+                                                        }
+                                                    });
+                                                    let mut dialog =
+                                                        get_file_dialog(Some(p.to_path_buf()))
+                                                            .show_files_filter(filter);
+                                                    dialog.open();
+                                                    app.open_file_dialog = Some(dialog);
+                                                    if let Some(uuid) = split.uuid.clone() {
+                                                        app.change_image.clone_from(&Some(
+                                                            ChangeImage::Split(uuid),
+                                                        ));
                                                     }
-                                                });
-                                                let mut dialog =
-                                                    get_file_dialog(Some(p.to_path_buf()))
-                                                        .show_files_filter(filter);
-                                                dialog.open();
-                                                app.open_file_dialog = Some(dialog);
-                                                app.change_image.clone_from(&Some(
-                                                    ChangeImage::Split(split.uuid.clone().unwrap()),
-                                                ));
-                                            }
+                                                }
+                                            };
                                         } else if ui.button("Add image").clicked() {
                                             let filter = Box::new({
                                                 move |path: &Path| -> bool {
@@ -463,9 +503,10 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                                 get_file_dialog(None).show_files_filter(filter);
                                             dialog.open();
                                             app.open_file_dialog = Some(dialog);
-                                            app.change_image.clone_from(&Some(ChangeImage::Split(
-                                                split.uuid.clone().unwrap(),
-                                            )));
+                                            if let Some(uuid) = split.uuid.clone() {
+                                                app.change_image
+                                                    .clone_from(&Some(ChangeImage::Split(uuid)));
+                                            }
                                         }
                                         if split.icon_path.is_some()
                                             && ui.button("Clear image").clicked()
@@ -535,14 +576,18 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                     if let Some(split) = app.delete_split {
                         c.splits.remove(split);
                         app.delete_split = None;
-                        c.save();
+                        if let Err(e) = c.save() {
+                            app.error = e;
+                        }
                         app.num_splits_category = c.splits.len();
                     }
 
                     if let Some(split) = app.add_split_under {
                         c.splits.insert(split + 1, Split::default());
                         app.add_split_under = None;
-                        c.save();
+                        if let Err(e) = c.save() {
+                            app.error = e;
+                        }
                         app.num_splits_category = c.splits.len();
                     }
 
@@ -556,11 +601,13 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
                                             c.icon_path = Some(file.to_path_buf())
                                         }
                                         ChangeImage::Split(uuid) => {
-                                            if let Some(split) = c
-                                                .splits
-                                                .iter_mut()
-                                                .find(|s| s.uuid.clone().unwrap() == uuid.clone())
-                                            {
+                                            if let Some(split) = c.splits.iter_mut().find(|s| {
+                                                if let Some(s_uuid) = s.uuid.clone() {
+                                                    s_uuid == uuid.clone()
+                                                } else {
+                                                    false
+                                                }
+                                            }) {
                                                 split.icon_path = Some(file.to_path_buf());
                                             }
                                         }
@@ -574,8 +621,12 @@ pub fn list(app: &mut HitSplit, ctx: &Context) {
 
                 ui.horizontal(|ui| {
                     if ui.button("Save splits").clicked() {
-                        g.save();
-                        c.save();
+                        if let Err(e) = g.save() {
+                            app.error = e;
+                        }
+                        if let Err(e) = c.save() {
+                            app.error = e;
+                        }
                     }
                 });
                 ui.separator();

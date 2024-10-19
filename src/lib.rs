@@ -2,11 +2,30 @@ mod run;
 mod settings;
 mod ui;
 
-use std::path::PathBuf;
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 use directories::ProjectDirs;
 use egui_file::FileDialog;
 pub use ui::hitsplit::HitSplit;
+
+#[derive(Clone)]
+pub enum Error {
+    None,
+    Error(String),
+}
+
+impl Error {
+    pub fn new(hitsplit_error: String, reported_error: String) -> Self {
+        let log = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("hitsplit.log");
+        if let Ok(mut l) = log {
+            writeln!(l, "{hitsplit_error} - {reported_error}").unwrap_or_default();
+        }
+        Error::Error(hitsplit_error)
+    }
+}
 
 fn get_pictures_path() -> PathBuf {
     if let Some(d) = directories::UserDirs::new() {

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::get_config_path;
+use crate::{get_config_path, Error};
 
 use super::split::Split;
 
@@ -23,24 +23,54 @@ impl Category {
         }
     }
 
-    pub fn load(uuid: String) -> Self {
+    pub fn load(uuid: String) -> Result<Self, Error> {
         let config_path = get_config_path();
-        let game_json: String =
+        let category_json: String =
             match std::fs::read_to_string(format!("{config_path}/categories/{uuid}.json")) {
-                Err(_) => "".to_string(),
+                Err(e) => return Err(Error::new(format!("Could not load category with uuid {uuid}. File not found: \"{config_path}/categories/{uuid}.json\""), e.to_string())),
                 Ok(f) => f,
             };
 
-        serde_json::from_str(game_json.as_str()).unwrap()
+        match serde_json::from_str(category_json.as_str()) {
+            Ok(category) => Ok(category),
+            Err(e) => Err(Error::new(
+                format!(
+                    "Could not parse category json file: \"{config_path}/categories/{uuid}.json\""
+                ),
+                e.to_string(),
+            )),
+        }
     }
 
-    pub fn save(&self) {
+    pub fn save(&self) -> Result<(), Error> {
         let config_path = get_config_path();
-        let category_str = serde_json::to_string(&self).unwrap();
-        let _ = std::fs::write(
+        let category_str = match serde_json::to_string(&self) {
+            Ok(category) => category,
+            Err(e) => {
+                return Err(Error::new(
+                    format!(
+                        "Could not serialize category {} with uuid {}",
+                        self.name, self.uuid
+                    ),
+                    e.to_string(),
+                ))
+            }
+        };
+        match std::fs::write(
             format!("{config_path}/categories/{}.json", self.uuid),
             category_str,
-        );
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                Err(Error::new(
+                    format!(
+                        "Could not save category {0} with uuid {1} on path \"{config_path}/categories/{1}.json\"",
+                        self.name, self.uuid
+                    ),
+                    e.to_string(),
+                ))
+            }
+        }
     }
 
     pub fn change_name(&mut self, new_name: &str) {

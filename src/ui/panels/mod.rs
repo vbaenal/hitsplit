@@ -1,4 +1,4 @@
-use egui::Context;
+use egui::{Color32, Context};
 
 use crate::HitSplit;
 
@@ -43,11 +43,22 @@ pub fn left_panel(app: &mut HitSplit, ctx: &Context) {
             {
                 app.open_page = Pages::Settings;
             }
-            egui::TopBottomPanel::bottom("bottom_panel")
+            egui::TopBottomPanel::bottom("version_panel")
                 .exact_height(20.)
                 .resizable(false)
                 .show_inside(ui, |ui| {
                     ui.colored_label(egui::Color32::from_rgb(240, 107, 12), VERSION);
                 });
+        });
+}
+
+pub fn bottom_panel(app: &mut HitSplit, ctx: &Context) {
+    egui::TopBottomPanel::bottom("error_panel")
+        .exact_height(20.0)
+        .resizable(false)
+        .show(ctx, |ui| {
+            if let crate::Error::Error(e) = &app.error {
+                ui.colored_label(Color32::from_rgb(250, 8, 8), e);
+            }
         });
 }
